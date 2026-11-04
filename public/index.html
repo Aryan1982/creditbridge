@@ -4,74 +4,159 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>CreditBridge — Explainable credit scoring for the unbanked</title>
+<link rel="preconnect" href="https://rsms.me/" />
+<link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
 <style>
-:root{--bg:#070b18;--card:rgba(20,28,52,.72);--line:rgba(120,140,200,.16);--fg:#eef1fa;--mut:#8f9bbd;--acc:#6d8dff;--acc2:#a26bff;--ok:#2ee59d;--bad:#ff5d73;--warn:#ffb547}
-*{box-sizing:border-box}body{margin:0;font:15px/1.5 Inter,system-ui,-apple-system,Segoe UI,sans-serif;color:var(--fg);background:radial-gradient(1200px 600px at 10% -10%,rgba(109,141,255,.18),transparent 60%),radial-gradient(900px 500px at 100% 0,rgba(162,107,255,.14),transparent 60%),var(--bg);min-height:100vh}
-header{padding:32px 32px 4px;display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap}
-h1{margin:0;font-size:34px;letter-spacing:-.02em}h1 span{background:linear-gradient(90deg,var(--acc),var(--acc2));-webkit-background-clip:text;color:transparent}header p{margin:4px 0;color:var(--mut)}
-.kpis{display:flex;gap:10px;flex-wrap:wrap}.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 14px;backdrop-filter:blur(10px)}.kpi b{display:block;font-size:20px}.kpi span{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
-.presets{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 4px}.presets button{flex:1;background:linear-gradient(180deg,rgba(109,141,255,.16),rgba(109,141,255,.05));border:1px solid var(--line);color:var(--fg);border-radius:10px;padding:8px;cursor:pointer;font:inherit;font-size:13px;transition:.15s}.presets button:hover{border-color:var(--acc);transform:translateY(-1px)}
-.gauge{width:170px;height:100px}.gauge text{fill:var(--fg)}
-.card{transition:border-color .2s}.card:hover{border-color:rgba(120,140,200,.32)}
-#form{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}#form>div{min-width:0}
-aside.card{position:sticky;top:16px;max-height:calc(100vh - 32px);overflow:auto}
-main{display:grid;grid-template-columns:minmax(320px,420px) 1fr;gap:20px;padding:20px 32px 40px}
-@media(max-width:900px){main{grid-template-columns:1fr}}
-.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;backdrop-filter:blur(14px);box-shadow:0 10px 40px rgba(0,0,0,.25)}
-h2{font-size:16px;margin:0 0 12px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}
-label{display:block;font-size:13px;color:var(--mut);margin:8px 0 3px}
-select,input{width:100%;padding:8px 10px;background:rgba(8,12,26,.7);color:var(--fg);border:1px solid var(--line);border-radius:9px;font:inherit;font-size:14px;outline:none;transition:border-color .15s}select:focus,input:focus{border-color:var(--acc)}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.tag{font-size:10px;padding:1px 6px;border-radius:6px;margin-left:6px;vertical-align:middle}
-.tag.b{background:#3a2a55;color:#c9a8ff}.tag.a{background:#173d33;color:#7be3bb}
-.score{display:flex;align-items:center;gap:24px}
-.big{font-size:60px;font-weight:800;line-height:1;letter-spacing:-.03em}
-.decision{font-size:20px;font-weight:800;padding:8px 16px;border-radius:12px;display:inline-block;letter-spacing:.03em}
-.decision.ok{background:rgba(46,229,157,.12);color:var(--ok);box-shadow:0 0 30px rgba(46,229,157,.25)}.decision.no{background:rgba(255,93,115,.12);color:var(--bad);box-shadow:0 0 30px rgba(255,93,115,.25)}
-.bar{height:10px;background:#0e1426;border-radius:6px;overflow:hidden;margin-top:10px}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--bad),var(--warn),var(--ok))}
-.reasons li{margin:6px 0}.pos{color:var(--ok)}.neg{color:var(--bad)}
-.contrib{display:grid;grid-template-columns:180px 1fr 60px;gap:8px;align-items:center;font-size:13px;margin:4px 0}
-.track{position:relative;height:12px;background:#0e1426;border-radius:4px}.track b{position:absolute;top:0;height:100%;border-radius:4px}
-.track:after{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--line)}
-table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}th{color:var(--mut);font-weight:500}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}@media(max-width:1200px){.grid2{grid-template-columns:1fr}}
-.cf li{margin:6px 0}.mut{color:var(--mut);font-size:13px}
-.langs button{background:#0e1426;border:1px solid var(--line);color:var(--fg);border-radius:8px;padding:4px 10px;cursor:pointer;margin-left:4px}.langs button.on{border-color:var(--acc);color:var(--acc)}
-footer{padding:0 32px 32px;color:var(--mut);font-size:12px}
+:root{--bg:#fafaf9;--card:#fff;--line:#e7e5e4;--line2:#f0efed;--fg:#1c1917;--fg2:#44403c;--mut:#78716c;--acc:#1d4ed8;--acc-soft:#eff4ff;--ok:#047857;--ok-soft:#ecfdf5;--bad:#b91c1c;--bad-soft:#fef2f2;--r:12px}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font:14px/1.55 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;font-feature-settings:"cv11","ss01";color:var(--fg);background:var(--bg);-webkit-font-smoothing:antialiased}
+@supports (font-variation-settings:normal){body{font-family:InterVariable,Inter,system-ui,-apple-system,"Segoe UI",sans-serif}}
+.num,.big,.chip{font-variant-numeric:tabular-nums}
+.wrap{max-width:1240px;margin:0 auto;padding:0 24px}
+
+/* nav */
+nav{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+nav .wrap{display:flex;align-items:center;gap:16px;height:56px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;letter-spacing:-.01em}
+.mark{width:22px;height:22px;border-radius:6px;background:var(--acc);display:grid;place-items:center}
+.mark:after{content:"";width:10px;height:5px;border:2px solid #fff;border-top:0;border-radius:0 0 6px 6px;margin-top:-3px}
+nav .sp{flex:1}
+.seg{display:inline-flex;background:#f5f5f4;border:1px solid var(--line);border-radius:8px;padding:2px;gap:2px}
+.seg button{border:0;background:transparent;color:var(--fg2);font:inherit;font-size:13px;font-weight:500;padding:5px 12px;border-radius:6px;cursor:pointer;line-height:1.3}
+.seg button:hover{color:var(--fg)}
+.seg button.on{background:#fff;color:var(--fg);box-shadow:0 1px 2px rgba(28,25,23,.08),0 0 0 1px var(--line)}
+
+/* intro */
+.intro{padding:36px 0 20px}
+.intro h1{margin:0;font-size:26px;font-weight:600;letter-spacing:-.02em}
+.intro p{margin:6px 0 0;color:var(--mut);font-size:15px;max-width:640px}
+
+/* layout */
+main.wrap{display:grid;grid-template-columns:380px 1fr;gap:24px;align-items:start;padding-bottom:48px}
+.col{display:grid;gap:24px;min-width:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:24px;min-width:0}
+aside.card{position:sticky;top:80px;max-height:calc(100vh - 100px);overflow:auto;padding:0}
+aside .head{padding:20px 20px 16px;border-bottom:1px solid var(--line)}
+h2{font-size:15px;font-weight:600;margin:0;letter-spacing:-.01em}
+h3{font-size:13px;font-weight:600;margin:0 0 10px;color:var(--fg)}
+.sub{color:var(--mut);font-size:13px;margin:2px 0 0}
+.card>h2{margin-bottom:16px}
+.seg.full{display:flex;margin-top:14px}.seg.full button{flex:1;padding:7px 8px}
+
+/* form */
+#form{padding:4px 20px 20px}
+fieldset{border:0;margin:0;padding:16px 0 0;display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}
+fieldset+fieldset{border-top:1px solid var(--line2);margin-top:16px}
+.grp{grid-column:1/-1;font-size:13px;font-weight:600;display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px}
+.grp small{font-weight:400;color:var(--mut);font-size:12px}
+.fld{min-width:0}
+label{display:block;font-size:12px;color:var(--mut);margin:0 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+select,input{width:100%;height:34px;padding:0 10px;background:#fff;color:var(--fg);border:1px solid var(--line);border-radius:8px;font:inherit;font-size:13px;outline:none;transition:border-color .12s,box-shadow .12s;font-variant-numeric:tabular-nums}
+select{appearance:none;-webkit-appearance:none;padding-right:26px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%2378716c' stroke-width='1.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+select:hover,input:hover{border-color:#d6d3d1}
+select:focus,input:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(29,78,216,.12)}
+.note{font-size:12px;color:var(--mut);padding:0 20px 20px;margin:0}
+
+/* decision hero */
+.hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.score{display:flex;align-items:center;gap:28px;margin:20px 0 4px;flex-wrap:wrap}
+.gauge{width:180px;height:100px;display:block}
+.big{font-size:56px;font-weight:600;line-height:1;letter-spacing:-.035em}
+.scale{color:var(--mut);font-size:13px;margin-top:6px}
+.dec{margin-left:auto;text-align:right}
+.decision{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;padding:5px 12px;border-radius:999px;border:1px solid}
+.decision:before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.decision.ok{color:var(--ok);background:var(--ok-soft);border-color:#a7f3d0}
+.decision.no{color:var(--bad);background:var(--bad-soft);border-color:#fecaca}
+#pd{color:var(--mut);font-size:13px;margin-top:8px}
+.bar{display:none}
+.divider{height:1px;background:var(--line);margin:24px -24px}
+
+.reasons{list-style:none;margin:0;padding:0}
+.reasons li{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line2)}
+.reasons li:first-child{border-top:0;padding-top:0}
+.reasons .f{font-weight:500}.reasons .val{color:var(--mut);font-size:13px}
+.reasons .chip{margin-left:auto}
+.chip{font-size:12px;font-weight:500;padding:2px 8px;border-radius:6px;white-space:nowrap}
+.chip.pos{color:var(--ok);background:var(--ok-soft)}.chip.neg{color:var(--bad);background:var(--bad-soft)}
+
+.cf{list-style:none;margin:0 0 16px;padding:0;counter-reset:s}
+.cf li{counter-increment:s;position:relative;padding:10px 0 10px 36px;border-top:1px solid var(--line2)}
+.cf li:first-child{border-top:0;padding-top:2px}
+.cf li:before{content:counter(s);position:absolute;left:0;top:8px;width:22px;height:22px;border-radius:50%;border:1px solid var(--line);font-size:12px;font-weight:600;display:grid;place-items:center;color:var(--acc);background:var(--acc-soft);border-color:#c7d7fe}
+.cf li:first-child:before{top:0}
+.cf li.done:before{content:"";background:var(--ok-soft);border-color:#a7f3d0}
+.cf li.stuck{padding-left:0;color:var(--mut);font-size:13px}.cf li.stuck:before{display:none}
+.cf .to{color:var(--mut)}.cf .proj{display:block;font-size:12px;color:var(--mut);margin-top:2px}
+
+.contrib{display:grid;grid-template-columns:minmax(110px,190px) 1fr;gap:12px;align-items:center;font-size:13px;padding:5px 0}
+.contrib .n{color:var(--fg2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.track{position:relative;height:8px}
+.track:before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--line2)}
+.track:after{content:"";position:absolute;left:50%;top:-4px;bottom:-4px;width:1px;background:#d6d3d1}
+.track b{position:absolute;top:0;height:100%;border-radius:2px}
+.legend{display:flex;gap:16px;font-size:12px;color:var(--mut);margin-top:14px}
+.legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;vertical-align:0}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.mut{color:var(--mut);font-size:13px}
+.foot-note{margin:16px 0 0;color:var(--mut);font-size:12px;line-height:1.5}
+footer{border-top:1px solid var(--line);color:var(--mut);font-size:12px;padding:20px 0 32px}
+
+@media(max-width:1100px){.grid2{grid-template-columns:1fr}}
+@media(max-width:960px){main.wrap{grid-template-columns:1fr}aside.card{position:static;max-height:none}}
+@media(max-width:560px){.wrap{padding:0 16px}.intro{padding:24px 0 16px}.intro h1{font-size:22px}.card{padding:20px}.divider{margin:20px -20px}.big{font-size:48px}.dec{margin-left:0;text-align:left}.contrib{grid-template-columns:110px 1fr;gap:8px}}
 </style>
 </head>
 <body>
-<header>
-<div><h1>Credit<span>Bridge</span></h1>
-<p>Explainable alternative-data credit scoring for thin-file &amp; unbanked applicants · Neural Storm 2026 · HI-04</p></div>
-<div class="kpis" id="kpis"></div>
-</header>
-<main>
-<aside class="card">
-<h2>Applicant</h2>
-<div class="presets"><button data-p="student">🎓 Student, no history</button><button data-p="gig">🛵 Gig worker</button><button data-p="salaried">💼 Salaried saver</button></div>
-<div class="mut">Tags: <span class="tag b">bureau</span> traditional credit-bureau data · <span class="tag a">alt</span> alternative data. Sex and nationality are never used.</div>
-<form id="form"></form>
-</aside>
-<section style="display:grid;gap:20px;align-content:start">
-<div class="card">
-<div style="display:flex;justify-content:space-between;align-items:center"><h2>Decision</h2><div class="langs" id="langs"></div></div>
-<div class="score"><div id="gaugeBox"></div><div><div class="big" id="points">–</div><div class="mut">CreditBridge score (300–900)</div></div>
-<div><div class="decision" id="decision">–</div><div class="mut" id="pd"></div></div></div>
-<div class="bar"><i id="barfill" style="width:0"></i></div>
-<h2 style="margin-top:18px">Why</h2><ul class="reasons" id="reasons"></ul>
-</div>
-<div class="grid2">
-<div class="card"><h2>What would change the outcome</h2><ul class="cf" id="cf"></ul><div class="mut">Greedy counterfactual search over actionable features only (no age, no history rewriting).</div></div>
-<div class="card"><h2>Feature contributions (log-odds)</h2><div id="contrib"></div><div class="mut">Green lowers default risk, red raises it. Exact additive attributions of the scorecard.</div></div>
-</div>
-<div class="grid2">
-<div class="card"><h2>Model performance (5-fold CV)</h2><table id="perf"></table><div class="mut" id="thin"></div></div>
-<div class="card"><h2>Fairness audit</h2><table id="fair"></table><div class="mut">Protected attributes excluded from training; audited post hoc on out-of-fold predictions.</div></div>
-</div>
+<nav><div class="wrap">
+<div class="brand"><span class="mark"></span>CreditBridge</div>
+<div class="sp"></div>
+<div class="seg" id="langs"></div>
+</div></nav>
+
+<div class="wrap">
+<section class="intro">
+<h1>Check your loan eligibility</h1>
+<p>Get an instant credit score with a clear explanation, even if you have little or no credit history.</p>
 </section>
+</div>
+
+<main class="wrap">
+<aside class="card">
+<div class="head">
+<h2>Applicant</h2>
+<p class="sub">Start from a profile, then adjust any field.</p>
+<div class="seg full presets"><button data-p="student">Student</button><button data-p="gig">Gig worker</button><button data-p="salaried">Salaried</button></div>
+</div>
+<form id="form"></form>
+<p class="note">Gender and nationality are never used.</p>
+</aside>
+
+<div class="col">
+<section class="card">
+<div class="hero-top"><div><h2>Your result</h2><p class="sub">Credit score, 300–900</p></div></div>
+<div class="score">
+<div id="gaugeBox"></div>
+<div><div class="big" id="points">–</div><div class="scale">out of 900</div></div>
+<div class="dec"><div class="decision" id="decision">–</div><div id="pd" class="num"></div></div>
+</div>
+<div class="bar"><i id="barfill"></i></div>
+<div class="divider"></div>
+<h3>What's driving this decision</h3>
+<ul class="reasons" id="reasons"></ul>
+</section>
+
+<div class="grid2">
+<section class="card"><h2>How to get approved</h2><ol class="cf" id="cf"></ol><p class="foot-note">Only includes things you can realistically change.</p></section>
+<section class="card"><h2>What helped and what hurt</h2><div id="contrib"></div>
+<div class="legend"><span><i style="background:var(--ok)"></i>Helps your score</span><span><i style="background:var(--bad)"></i>Hurts your score</span></div></section>
+</div>
+</div>
 </main>
-<footer>Prototype for research and demonstration only — not a lending decision. No applicant data leaves your browser. Trained on the public Statlog German Credit dataset; see README for limitations.</footer>
+
+<footer><div class="wrap">Estimates only — not a final lending decision. Your data never leaves this device.</div></footer>
 <script src="app.js"></script>
 </body>
 </html>

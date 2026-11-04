@@ -24,15 +24,14 @@ const PRESETS = {
 };
 function applyPreset(name) {
   for (const [f, v] of Object.entries(PRESETS[name])) { const el = $("f_" + f); if (el) el.value = v; }
+  document.querySelectorAll(".presets button").forEach((b) => b.classList.toggle("on", b.dataset.p === name));
   render();
 }
 function gauge(score, ok) {
-  const r = 70, cx = 85, cy = 88, a = Math.PI * (1 - (score - 300) / 600);
-  const x = cx + r * Math.cos(a), y = cy - r * Math.sin(a);
-  return `<svg class="gauge" viewBox="0 0 170 100"><defs><linearGradient id="gg"><stop offset="0" stop-color="#ff5d73"/><stop offset=".5" stop-color="#ffb547"/><stop offset="1" stop-color="#2ee59d"/></linearGradient></defs>
-  <path d="M15 88 A70 70 0 0 1 155 88" fill="none" stroke="rgba(120,140,200,.18)" stroke-width="12" stroke-linecap="round"/>
-  <path d="M15 88 A70 70 0 0 1 155 88" fill="none" stroke="url(#gg)" stroke-width="12" stroke-linecap="round" stroke-dasharray="${Math.PI * r * (score - 300) / 600} 999"/>
-  <circle cx="${x}" cy="${y}" r="7" fill="${ok ? "#2ee59d" : "#ff5d73"}" stroke="#070b18" stroke-width="3"/></svg>`;
+  const r = 80, frac = (score - 300) / 600, col = ok ? "#047857" : "#b91c1c";
+  return `<svg class="gauge" viewBox="0 0 180 100" aria-hidden="true">
+  <path d="M10 92 A80 80 0 0 1 170 92" fill="none" stroke="#efedeb" stroke-width="8" stroke-linecap="round"/>
+  <path d="M10 92 A80 80 0 0 1 170 92" fill="none" stroke="${col}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${Math.PI * r * frac} 999"/></svg>`;
 }
 
 function contributions(x) {
@@ -68,15 +67,26 @@ function counterfactual(x) {
   return { steps, ok: pd(cur) < M.threshold };
 }
 
+const GROUPS = [
+  ["Banking & savings", ["checking_status", "savings_status", "property_magnitude", "own_telephone"]],
+  ["Work & housing", ["employment", "job", "housing", "residence_since", "num_dependents", "age"]],
+  ["Loan request", ["credit_amount", "duration", "installment_commitment", "purpose", "other_parties"]],
+  ["Credit history", ["credit_history", "existing_credits", "other_payment_plans"], "Optional"],
+];
 function buildForm() {
   const form = $("form"); const feats = M.scorecard.features;
-  const order = [...M.alternative_features, ...M.bureau_features];
-  form.innerHTML = order.map((f) => {
-    const s = feats[f]; const tag = M.bureau_features.includes(f) ? '<span class="tag b">bureau</span>' : '<span class="tag a">alt</span>';
+  const field = (f) => {
+    const s = feats[f];
     const input = s.type === "cat"
       ? `<select id="f_${f}">${Object.keys(s.levels).map((l) => `<option${l === DEFAULTS[f] ? " selected" : ""}>${l}</option>`).join("")}</select>`
-      : `<input id="f_${f}" type="number" min="${s.min}" max="${s.max}" value="${DEFAULTS[f]}">`;
-    return `<div><label>${NAMES.en[f]}${tag}</label>${input}</div>`;
+      : `<input id="f_${f}" type="number" inputmode="numeric" min="${s.min}" max="${s.max}" value="${DEFAULTS[f]}">`;
+    return `<div class="fld"><label for="f_${f}" data-f="${f}">${NAMES[lang][f]}</label>${input}</div>`;
+  };
+  const grouped = new Set(GROUPS.flatMap(([, fs]) => fs));
+  const rest = Object.keys(feats).filter((f) => !grouped.has(f));
+  form.innerHTML = GROUPS.map(([title, fs, hint], i) => {
+    const all = i === GROUPS.length - 1 ? [...fs, ...rest] : fs;
+    return `<fieldset><div class="grp">${title}${hint ? `<small>${hint}</small>` : ""}</div>${all.filter((f) => feats[f]).map(field).join("")}</fieldset>`;
   }).join("");
   form.addEventListener("input", render);
   document.querySelectorAll(".presets button").forEach((b) => b.onclick = () => applyPreset(b.dataset.p));
@@ -87,40 +97,29 @@ function read() {
   return x;
 }
 function render() {
-  const x = read(), t = T[lang], n = NAMES[lang], p = pd(x), ok = p < M.threshold;
-  $("gaugeBox").innerHTML = gauge(points(p), ok);
-  $("points").textContent = points(p);
-  $("decision").textContent = ok ? t.ok : t.no; $("decision").className = "decision " + (ok ? "ok" : "no");
-  $("pd").textContent = `${t.pd}: ${(p * 100).toFixed(1)}% · threshold ${(M.threshold * 100).toFixed(1)}%`;
-  $("barfill").style.width = ((points(p) - 300) / 6) + "%";
+  const x = read(), t = T[lang], n = NAMES[lang], p = pd(x), ok = p < M.threshold, sc = points(p);
+  const label = (s) => lang === "en" ? s[0] + s.slice(1).toLowerCase() : s;
+  document.querySelectorAll("#form label[data-f]").forEach((l) => l.textContent = n[l.dataset.f]);
+  $("gaugeBox").innerHTML = gauge(sc, ok);
+  $("points").textContent = sc;
+  $("decision").textContent = label(ok ? t.ok : t.no); $("decision").className = "decision " + (ok ? "ok" : "no");
+  $("pd").textContent = `${t.pd}: ${(p * 100).toFixed(1)}%`;
+  $("barfill").style.width = ((sc - 300) / 6) + "%";
   const c = Object.entries(contributions(x)).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
-  $("reasons").innerHTML = c.slice(0, 4).map(([f, v]) => `<li><b>${n[f]}</b> = ${x[f]} — <span class="${v < 0 ? "pos" : "neg"}">${v < 0 ? t.up : t.down}</span></li>`).join("");
-  const max = Math.max(...c.map(([, v]) => Math.abs(v)));
+  $("reasons").innerHTML = c.slice(0, 4).map(([f, v]) => `<li><span class="f">${n[f]}</span><span class="val">${x[f]}</span><span class="chip ${v < 0 ? "pos" : "neg"}">${v < 0 ? "+" : "−"} ${v < 0 ? t.up : t.down}</span></li>`).join("");
+  const max = Math.max(...c.map(([, v]) => Math.abs(v))) || 1;
   $("contrib").innerHTML = c.map(([f, v]) => {
     const w = Math.abs(v) / max * 50; const left = v < 0 ? 50 - w : 50;
-    return `<div class="contrib"><span>${n[f]}</span><div class="track"><b style="left:${left}%;width:${w}%;background:${v < 0 ? "var(--ok)" : "var(--bad)"}"></b></div><span>${v.toFixed(2)}</span></div>`;
+    return `<div class="contrib"><span class="n" title="${n[f]}">${n[f]}</span><div class="track"><b style="left:${left}%;width:${w}%;background:${v < 0 ? "var(--ok)" : "var(--bad)"}"></b></div></div>`;
   }).join("");
-  if (ok) $("cf").innerHTML = `<li>${t.none}</li>`;
+  if (ok) $("cf").innerHTML = `<li class="done">${t.none}</li>`;
   else {
-    const r = counterfactual(x);
-    $("cf").innerHTML = r.steps.map((s) => `<li>${t.cf} <b>${n[s.f]}</b>: ${x[s.f]} ${t.to} <b>${s.v}</b> ${t.reach} ${points(s.p)}</li>`).join("") + (r.ok ? "" : `<li class="mut">${t.stuck}</li>`);
+    const r = counterfactual(x), reach = t.reach.replace(/^→\s*/, "");
+    $("cf").innerHTML = r.steps.map((s) => `<li>${t.cf} <b>${n[s.f]}</b> <span class="to">${x[s.f]} ${t.to}</span> <b>${s.v}</b><span class="proj">${reach} <span class="num">${points(s.p)}</span></span></li>`).join("") + (r.ok ? "" : `<li class="stuck">${t.stuck}</li>`);
   }
-}
-function renderMetrics() {
-  const m = M.metrics, rows = Object.entries(m.models);
-  $("perf").innerHTML = `<tr><th>Model</th><th>ROC-AUC</th><th>KS</th><th>Brier</th><th>F1 (bad)</th></tr>` +
-    rows.map(([k, v]) => `<tr><td>${k.replace(/_/g, " ")}</td><td>${v.roc_auc}</td><td>${v.ks}</td><td>${v.brier}</td><td>${v.f1_bad}</td></tr>`).join("");
-  const th = m.thin_file_auc;
-  $("thin").textContent = `Thin-file applicants (n=${th.n}, no/fully-paid prior credit): bureau-only AUC ${th.logreg_bureau_only} vs alternative-data AUC ${th.logreg_alternative_only} vs combined ${th.logreg_combined}.`;
-  const bo = m.models.logreg_bureau_only, ao = m.models.logreg_alternative_only;
-  $("kpis").innerHTML = [[m.models.logreg_combined.roc_auc, "ROC-AUC (deployed)"], ["+" + (ao.roc_auc - bo.roc_auc).toFixed(2), "AUC lift: alt vs bureau"], [th.logreg_alternative_only, "Thin-file AUC"], [m.fairness.sex.demographic_parity_ratio, "Sex parity ratio"]]
-    .map(([v, l]) => `<div class="kpi"><b>${v}</b><span>${l}</span></div>`).join("");
-  $("fair").innerHTML = `<tr><th>Group</th><th>n</th><th>Approval</th><th>Good-payer approval</th></tr>` +
-    Object.entries(m.fairness).map(([attr, a]) => Object.entries(a.groups).map(([g, r]) => `<tr><td>${attr}: ${g}</td><td>${r.n}</td><td>${(r.approval_rate * 100).toFixed(1)}%</td><td>${(r.good_payer_approval_rate * 100).toFixed(1)}%</td></tr>`).join("") +
-      `<tr><td colspan="4" class="mut">${attr}: parity ratio ${a.demographic_parity_ratio} · equal-opportunity gap ${a.equal_opportunity_diff}</td></tr>`).join("");
 }
 function renderLangs() {
   $("langs").innerHTML = [["en", "EN"], ["hi", "हिं"], ["te", "తె"]].map(([k, l]) => `<button class="${k === lang ? "on" : ""}" data-l="${k}">${l}</button>`).join("");
   $("langs").querySelectorAll("button").forEach((b) => b.onclick = () => { lang = b.dataset.l; renderLangs(); render(); });
 }
-fetch("model.json").then((r) => r.json()).then((m) => { M = m; buildForm(); renderLangs(); renderMetrics(); render(); });
+fetch("model.json").then((r) => r.json()).then((m) => { M = m; buildForm(); renderLangs(); render(); });

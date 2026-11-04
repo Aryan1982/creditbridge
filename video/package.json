@@ -1,0 +1,22 @@
+{
+  "name": "creditbridge-video",
+  "version": "2.0.0",
+  "private": true,
+  "description": "CreditBridge v2 demo/pitch video (Remotion)",
+  "scripts": {
+    "sync-metrics": "node scripts/sync-metrics.mjs",
+    "studio": "npm run sync-metrics && remotion studio",
+    "render": "npm run sync-metrics && remotion render CreditBridge out/creditbridge.mp4",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.540",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "remotion": "4.0.540"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "typescript": "^5.9.3"
+  }
+}

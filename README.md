@@ -6,7 +6,11 @@
 
 **Team:** CreditBridge — Aryan Thakor (solo)
 
-![CreditBridge report](docs/screenshot.png)
+![Report on a forged statement: authenticity checks failed, decision routed to review](docs/screenshot.png)
+
+| Landing | Lender console |
+|---|---|
+| ![Landing](docs/landing.png) | ![Lender console](docs/lender.png) |
 
 ## Problem
 

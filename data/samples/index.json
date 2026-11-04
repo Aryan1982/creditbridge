@@ -1,0 +1,92 @@
+[
+ {
+  "id": "ravi_gig",
+  "name": "Ravi Kumar",
+  "persona": "gig_worker",
+  "description": "Gig worker in Hyderabad — payouts from Dunzo and Blinkit; 9 months of statements.",
+  "format": "csv",
+  "tampered": false,
+  "file": "ravi_gig.csv"
+ },
+ {
+  "id": "priya_salaried",
+  "name": "Priya Sharma",
+  "persona": "salaried",
+  "description": "Salaried employee in Pune — salary from Cognizant Ltd; 12 months of statements.",
+  "format": "csv",
+  "tampered": false,
+  "file": "priya_salaried.csv"
+ },
+ {
+  "id": "mohammed_shop",
+  "name": "Mohammed Irfan",
+  "persona": "shopkeeper",
+  "description": "Shop owner in Warangal — daily UPI/QR shop sales; 12 months of statements.",
+  "format": "csv",
+  "tampered": false,
+  "file": "mohammed_shop.csv"
+ },
+ {
+  "id": "lakshmi_homemaker",
+  "name": "Lakshmi Devi",
+  "persona": "homemaker",
+  "description": "Homemaker in Karimnagar — household money from family plus tailoring income; 9 months of statements.",
+  "format": "csv",
+  "tampered": false,
+  "file": "lakshmi_homemaker.csv"
+ },
+ {
+  "id": "suresh_farmer",
+  "name": "Suresh Patil",
+  "persona": "farmer",
+  "description": "Farmer in Ahmednagar — seasonal crop sales and PM-KISAN; 12 months of statements.",
+  "format": "csv",
+  "tampered": false,
+  "file": "suresh_farmer.csv"
+ },
+ {
+  "id": "ananya_student",
+  "name": "Ananya Reddy",
+  "persona": "student",
+  "description": "Student in Hyderabad — family support; 8 months of statements.",
+  "format": "csv",
+  "tampered": false,
+  "file": "ananya_student.csv"
+ },
+ {
+  "id": "kavya_salaried",
+  "name": "Kavya Nair",
+  "persona": "salaried",
+  "description": "Salaried employee in Kochi — salary from Blue Dart; 10 months of statements.",
+  "format": "csv",
+  "tampered": false,
+  "file": "kavya_salaried.csv"
+ },
+ {
+  "id": "fatima_shop",
+  "name": "Fatima Shaikh",
+  "persona": "shopkeeper",
+  "description": "Shop owner in Nashik — daily UPI/QR shop sales; 9 months of statements.",
+  "format": "csv",
+  "tampered": false,
+  "file": "fatima_shop.csv"
+ },
+ {
+  "id": "arjun_gig",
+  "name": "Arjun Singh",
+  "persona": "gig_worker",
+  "description": "Gig worker in Bengaluru — payouts from Swiggy; 8 months of statements.",
+  "format": "csv",
+  "tampered": false,
+  "file": "arjun_gig.csv"
+ },
+ {
+  "id": "ramesh_farmer",
+  "name": "Ramesh Yadav",
+  "persona": "farmer",
+  "description": "Farmer in Sitapur — seasonal crop sales and PM-KISAN; 12 months of statements.",
+  "format": "csv",
+  "tampered": false,
+  "file": "ramesh_farmer.csv"
+ }
+]

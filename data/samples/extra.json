@@ -1,0 +1,72 @@
+[
+ {
+  "id": "priya_salaried-pdf",
+  "name": "Priya Sharma",
+  "persona": "salaried",
+  "description": "Priya Sharma's bank statement as a PDF downloaded from the bank.",
+  "format": "pdf",
+  "tampered": false,
+  "file": "priya_salaried-statement.pdf",
+  "variant_of": "priya_salaried"
+ },
+ {
+  "id": "ravi_gig-pdf",
+  "name": "Ravi Kumar",
+  "persona": "gig_worker",
+  "description": "Ravi Kumar's bank statement as a PDF downloaded from the bank.",
+  "format": "pdf",
+  "tampered": false,
+  "file": "ravi_gig-statement.pdf",
+  "variant_of": "ravi_gig"
+ },
+ {
+  "id": "lakshmi_homemaker-pdf",
+  "name": "Lakshmi Devi",
+  "persona": "homemaker",
+  "description": "Lakshmi Devi's bank statement as a PDF downloaded from the bank.",
+  "format": "pdf",
+  "tampered": false,
+  "file": "lakshmi_homemaker-statement.pdf",
+  "variant_of": "lakshmi_homemaker"
+ },
+ {
+  "id": "suresh_farmer-aa",
+  "name": "Suresh Patil",
+  "persona": "farmer",
+  "description": "Suresh Patil's account data shared through the RBI Account Aggregator network (consent-based, straight from the bank).",
+  "format": "aa_json",
+  "tampered": false,
+  "file": "suresh_farmer-aa.json",
+  "variant_of": "suresh_farmer"
+ },
+ {
+  "id": "ananya_student-aa",
+  "name": "Ananya Reddy",
+  "persona": "student",
+  "description": "Ananya Reddy's account data shared through the RBI Account Aggregator network (consent-based, straight from the bank).",
+  "format": "aa_json",
+  "tampered": false,
+  "file": "ananya_student-aa.json",
+  "variant_of": "ananya_student"
+ },
+ {
+  "id": "priya_salaried-edited",
+  "name": "Priya Sharma",
+  "persona": "salaried",
+  "description": "Tampered: the 2026-05-31 salary was changed from ₹42,430 to ₹68,000 in a PDF editor.",
+  "format": "pdf",
+  "tampered": true,
+  "file": "priya_salaried-edited.pdf",
+  "variant_of": "priya_salaried"
+ },
+ {
+  "id": "ravi_gig-roundtrip",
+  "name": "Ravi Kumar",
+  "persona": "gig_worker",
+  "description": "Tampered: ₹83,000 was received from a friend and sent straight back 3 times to make income look higher.",
+  "format": "pdf",
+  "tampered": true,
+  "file": "ravi_gig-roundtrip.pdf",
+  "variant_of": "ravi_gig"
+ }
+]

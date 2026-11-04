@@ -195,11 +195,11 @@
     "f1_bad": 0.6013
    },
    "gbm_combined": {
-    "roc_auc": 0.7784,
-    "ks": 0.4314,
-    "brier": 0.176,
-    "accuracy": 0.726,
-    "f1_bad": 0.6017
+    "roc_auc": 0.7805,
+    "ks": 0.4386,
+    "brier": 0.1745,
+    "accuracy": 0.723,
+    "f1_bad": 0.606
    },
    "logreg_bureau_only": {
     "roc_auc": 0.6246,

@@ -1,0 +1,314 @@
+{
+ "data": {
+  "n_applicants": 6000,
+  "n_transactions": 2852088,
+  "default_rate": 0.2018,
+  "default_rate_by_persona": {
+   "farmer": 0.2616,
+   "gig_worker": 0.2284,
+   "homemaker": 0.1791,
+   "salaried": 0.1396,
+   "shopkeeper": 0.2035,
+   "student": 0.2128
+  },
+  "categorizer_agreement_in_population": 0.9876
+ },
+ "model": "standardized logistic regression scorecard (sign-constrained)",
+ "benchmark": {
+  "logistic_scorecard": {
+   "auc": 0.7194,
+   "ks": 0.3294,
+   "gini": 0.4388,
+   "brier": 0.1459
+  },
+  "woe_scorecard": {
+   "auc": 0.7277,
+   "ks": 0.3485,
+   "gini": 0.4553,
+   "brier": 0.1426
+  },
+  "hist_gradient_boosting": {
+   "auc": 0.7172,
+   "ks": 0.328,
+   "gini": 0.4343,
+   "brier": 0.146
+  }
+ },
+ "auc": 0.7194,
+ "ks": 0.3294,
+ "gini": 0.4388,
+ "brier": 0.1459,
+ "calibration": [
+  {
+   "bin_pred": 0.0612,
+   "bin_obs": 0.0533,
+   "n": 600
+  },
+  {
+   "bin_pred": 0.091,
+   "bin_obs": 0.08,
+   "n": 600
+  },
+  {
+   "bin_pred": 0.1131,
+   "bin_obs": 0.1033,
+   "n": 600
+  },
+  {
+   "bin_pred": 0.1327,
+   "bin_obs": 0.09,
+   "n": 600
+  },
+  {
+   "bin_pred": 0.1553,
+   "bin_obs": 0.1617,
+   "n": 600
+  },
+  {
+   "bin_pred": 0.1817,
+   "bin_obs": 0.2017,
+   "n": 600
+  },
+  {
+   "bin_pred": 0.2149,
+   "bin_obs": 0.2283,
+   "n": 600
+  },
+  {
+   "bin_pred": 0.2551,
+   "bin_obs": 0.2767,
+   "n": 600
+  },
+  {
+   "bin_pred": 0.3145,
+   "bin_obs": 0.3467,
+   "n": 600
+  },
+  {
+   "bin_pred": 0.4992,
+   "bin_obs": 0.4767,
+   "n": 600
+  }
+ ],
+ "by_persona": [
+  {
+   "persona": "farmer",
+   "n": 906,
+   "default_rate": 0.2616,
+   "auc": 0.6486,
+   "mean_pd": 0.2652,
+   "approval_rate": 0.2373,
+   "good_payer_approval_rate": 0.278,
+   "approved_default_rate": 0.1349
+  },
+  {
+   "persona": "gig_worker",
+   "n": 1353,
+   "default_rate": 0.2284,
+   "auc": 0.7452,
+   "mean_pd": 0.2203,
+   "approval_rate": 0.1434,
+   "good_payer_approval_rate": 0.1724,
+   "approved_default_rate": 0.0722
+  },
+  {
+   "persona": "homemaker",
+   "n": 748,
+   "default_rate": 0.1791,
+   "auc": 0.7094,
+   "mean_pd": 0.1795,
+   "approval_rate": 0.2727,
+   "good_payer_approval_rate": 0.3111,
+   "approved_default_rate": 0.0637
+  },
+  {
+   "persona": "salaried",
+   "n": 1325,
+   "default_rate": 0.1396,
+   "auc": 0.7315,
+   "mean_pd": 0.17,
+   "approval_rate": 0.3155,
+   "good_payer_approval_rate": 0.3509,
+   "approved_default_rate": 0.0431
+  },
+  {
+   "persona": "shopkeeper",
+   "n": 963,
+   "default_rate": 0.2035,
+   "auc": 0.7076,
+   "mean_pd": 0.1744,
+   "approval_rate": 0.2523,
+   "good_payer_approval_rate": 0.2999,
+   "approved_default_rate": 0.0535
+  },
+  {
+   "persona": "student",
+   "n": 705,
+   "default_rate": 0.2128,
+   "auc": 0.7358,
+   "mean_pd": 0.2062,
+   "approval_rate": 0.2099,
+   "good_payer_approval_rate": 0.2432,
+   "approved_default_rate": 0.0878
+  }
+ ],
+ "by_gender": [
+  {
+   "gender": "F",
+   "n": 1927,
+   "default_rate": 0.1811,
+   "auc": 0.708,
+   "mean_pd": 0.1917,
+   "approval_rate": 0.2538,
+   "good_payer_approval_rate": 0.2864,
+   "approved_default_rate": 0.0757
+  },
+  {
+   "gender": "M",
+   "n": 4073,
+   "default_rate": 0.2116,
+   "auc": 0.7221,
+   "mean_pd": 0.2067,
+   "approval_rate": 0.2291,
+   "good_payer_approval_rate": 0.2709,
+   "approved_default_rate": 0.0675
+  }
+ ],
+ "ablations": [
+  {
+   "name": "Bureau-like: has existing EMI + any bounce",
+   "auc": 0.6144
+  },
+  {
+   "name": "Income only (level, variability, regularity)",
+   "auc": 0.5454
+  },
+  {
+   "name": "Cash-flow without balance features",
+   "auc": 0.7105
+  },
+  {
+   "name": "Full cash-flow scorecard (deployed)",
+   "auc": 0.7194
+  }
+ ],
+ "feature_importance": [
+  {
+   "key": "buffer_months",
+   "label": "Savings buffer (months of income)",
+   "importance": 0.2032,
+   "weight": -0.34261665
+  },
+  {
+   "key": "bill_regularity",
+   "label": "Bills paid regularly",
+   "importance": 0.1995,
+   "weight": -0.3363741
+  },
+  {
+   "key": "foir",
+   "label": "Income already going to EMIs",
+   "importance": 0.1608,
+   "weight": 0.27110949
+  },
+  {
+   "key": "savings_rate",
+   "label": "Income saved or invested",
+   "importance": 0.1501,
+   "weight": -0.25301262
+  },
+  {
+   "key": "loan_app_rate",
+   "label": "Instant loan app use per month",
+   "importance": 0.078,
+   "weight": 0.13156657
+  },
+  {
+   "key": "bounce_rate",
+   "label": "Bounced payments per month",
+   "importance": 0.0759,
+   "weight": 0.1279863
+  },
+  {
+   "key": "income_cv",
+   "label": "Income variability",
+   "importance": 0.0547,
+   "weight": 0.09229608
+  },
+  {
+   "key": "net_cashflow_ratio",
+   "label": "Money left over each month",
+   "importance": 0.0502,
+   "weight": -0.0846519
+  },
+  {
+   "key": "betting_share",
+   "label": "Spend on betting & gaming",
+   "importance": 0.0263,
+   "weight": 0.04430496
+  },
+  {
+   "key": "pre_income_buffer",
+   "label": "Balance left before income arrives",
+   "importance": 0.0011,
+   "weight": -0.00193296
+  }
+ ],
+ "bands": [
+  {
+   "band": "A",
+   "n": 237,
+   "default_rate": 0.0633,
+   "max_pd": 0.06,
+   "rate_pct": 18.0
+  },
+  {
+   "band": "B",
+   "n": 1185,
+   "default_rate": 0.0717,
+   "max_pd": 0.11,
+   "rate_pct": 19.5
+  },
+  {
+   "band": "C",
+   "n": 1848,
+   "default_rate": 0.1337,
+   "max_pd": 0.18,
+   "rate_pct": 21.0
+  },
+  {
+   "band": "D",
+   "n": 1741,
+   "default_rate": 0.243,
+   "max_pd": 0.3,
+   "rate_pct": 22.5
+  },
+  {
+   "band": "E",
+   "n": 989,
+   "default_rate": 0.4459,
+   "max_pd": 1.0,
+   "rate_pct": 24.0
+  }
+ ],
+ "policy": {
+  "approve_rate": 0.237,
+  "review_rate": 0.4277,
+  "decline_rate": 0.3353,
+  "approved_default_rate": 0.0703,
+  "declined_default_rate": 0.3559,
+  "approve_max_pd": 0.11,
+  "review_max_pd": 0.22
+ },
+ "fairness_notes": "Gender is never a model input; it is simulated only to audit outcomes. Approval rate female 25% vs male 23% (ratio 1.11); approval among applicants who repaid: female 29% vs male 27%. Differences by persona mostly track genuinely different simulated default rates; seasonal (farm) income is measured on full months to avoid penalising lumpy-but-adequate earnings.",
+ "parity_max_abs_diff": 3.983460650225368e-08,
+ "dropped_features": [
+  "income_monthly_median",
+  "income_months_ratio",
+  "income_sources",
+  "low_balance_days",
+  "discretionary_share",
+  "cash_share",
+  "bank_charge_rate"
+ ]
+}

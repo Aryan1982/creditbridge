@@ -1,0 +1,147 @@
+{
+ "model": "char 3-5gram + word TF-IDF (sublinear, l2) \u2192 multinomial logistic regression",
+ "accuracy": 0.8598,
+ "macro_f1": 0.7965,
+ "eval": "held-out unseen merchants/counterparties (25% of merchants per category never seen in training)",
+ "n_train": 68469,
+ "n_test": 33115,
+ "n_features": 12000,
+ "per_class": [
+  {
+   "category": "salary",
+   "f1": 0.9491,
+   "support": 618
+  },
+  {
+   "category": "gig_income",
+   "f1": 0.7592,
+   "support": 2759
+  },
+  {
+   "category": "business_income",
+   "f1": 0.9169,
+   "support": 3026
+  },
+  {
+   "category": "agri_income",
+   "f1": 0.932,
+   "support": 251
+  },
+  {
+   "category": "family_transfer_in",
+   "f1": 0.8362,
+   "support": 1370
+  },
+  {
+   "category": "refund_cashback",
+   "f1": 0.9636,
+   "support": 370
+  },
+  {
+   "category": "interest_in",
+   "f1": 0.0,
+   "support": 1
+  },
+  {
+   "category": "rent",
+   "f1": 0.8298,
+   "support": 2278
+  },
+  {
+   "category": "groceries",
+   "f1": 0.8869,
+   "support": 3096
+  },
+  {
+   "category": "utilities",
+   "f1": 0.8751,
+   "support": 1057
+  },
+  {
+   "category": "mobile_recharge",
+   "f1": 0.8042,
+   "support": 216
+  },
+  {
+   "category": "fuel_transport",
+   "f1": 0.4819,
+   "support": 837
+  },
+  {
+   "category": "food_delivery",
+   "f1": 0.6483,
+   "support": 1003
+  },
+  {
+   "category": "shopping",
+   "f1": 0.2478,
+   "support": 1073
+  },
+  {
+   "category": "healthcare",
+   "f1": 0.7243,
+   "support": 316
+  },
+  {
+   "category": "education",
+   "f1": 0.741,
+   "support": 158
+  },
+  {
+   "category": "emi_loan",
+   "f1": 0.863,
+   "support": 253
+  },
+  {
+   "category": "loan_app",
+   "f1": 0.7925,
+   "support": 224
+  },
+  {
+   "category": "insurance",
+   "f1": 1.0,
+   "support": 189
+  },
+  {
+   "category": "investment_savings",
+   "f1": 0.9668,
+   "support": 103
+  },
+  {
+   "category": "betting_gaming",
+   "f1": 0.82,
+   "support": 236
+  },
+  {
+   "category": "cash_withdrawal",
+   "f1": 1.0,
+   "support": 296
+  },
+  {
+   "category": "bank_charges",
+   "f1": 0.6667,
+   "support": 1
+  },
+  {
+   "category": "bounce_charge",
+   "f1": 1.0,
+   "support": 1
+  },
+  {
+   "category": "transfer_out",
+   "f1": 0.902,
+   "support": 5422
+  },
+  {
+   "category": "transfer_in_other",
+   "f1": 0.904,
+   "support": 5351
+  },
+  {
+   "category": "other",
+   "f1": 0.9944,
+   "support": 2610
+  }
+ ],
+ "parity_max_abs_diff": 5.9227368087722e-06
+}

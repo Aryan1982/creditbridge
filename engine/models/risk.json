@@ -1,0 +1,205 @@
+{
+ "version": "2.0",
+ "model": "standardized logistic regression scorecard (sign-constrained)",
+ "intercept": -1.53567569,
+ "features": [
+  {
+   "key": "income_cv",
+   "label": "Income variability",
+   "transform": "identity",
+   "clip": [
+    0,
+    2.0
+   ],
+   "mean": 0.47468817,
+   "std": 0.60625516,
+   "weight": 0.09229608,
+   "actionable": false,
+   "p05": 0.016428,
+   "p50": 0.217146,
+   "p95": 2.0
+  },
+  {
+   "key": "buffer_months",
+   "label": "Savings buffer (months of income)",
+   "transform": "log1p",
+   "clip": [
+    0,
+    12
+   ],
+   "mean": 1.05529302,
+   "std": 0.47761916,
+   "weight": -0.34261665,
+   "actionable": true,
+   "p05": 0.42212,
+   "p50": 0.98341,
+   "p95": 2.022624
+  },
+  {
+   "key": "net_cashflow_ratio",
+   "label": "Money left over each month",
+   "transform": "identity",
+   "clip": [
+    -1,
+    1
+   ],
+   "mean": 0.03408113,
+   "std": 0.20013131,
+   "weight": -0.0846519,
+   "actionable": false,
+   "p05": -0.291303,
+   "p50": 0.074481,
+   "p95": 0.183611
+  },
+  {
+   "key": "foir",
+   "label": "Income already going to EMIs",
+   "transform": "identity",
+   "clip": [
+    0,
+    1.5
+   ],
+   "mean": 0.14340987,
+   "std": 0.22276788,
+   "weight": 0.27110949,
+   "actionable": true,
+   "p05": 0.0,
+   "p50": 0.053389,
+   "p95": 0.517659
+  },
+  {
+   "key": "bounce_rate",
+   "label": "Bounced payments per month",
+   "transform": "log1p",
+   "clip": [
+    0,
+    10
+   ],
+   "mean": 0.18336992,
+   "std": 0.31847485,
+   "weight": 0.1279863,
+   "actionable": true,
+   "p05": 0.0,
+   "p50": 0.0,
+   "p95": 0.884064
+  },
+  {
+   "key": "loan_app_rate",
+   "label": "Instant loan app use per month",
+   "transform": "log1p",
+   "clip": [
+    0,
+    10
+   ],
+   "mean": 0.05780799,
+   "std": 0.14242721,
+   "weight": 0.13156657,
+   "actionable": true,
+   "p05": 0.0,
+   "p50": 0.0,
+   "p95": 0.404372
+  },
+  {
+   "key": "betting_share",
+   "label": "Spend on betting & gaming",
+   "transform": "identity",
+   "clip": [
+    0,
+    0.5
+   ],
+   "mean": 0.00545461,
+   "std": 0.02332194,
+   "weight": 0.04430496,
+   "actionable": true,
+   "p05": 0.0,
+   "p50": 0.0,
+   "p95": 0.040813
+  },
+  {
+   "key": "bill_regularity",
+   "label": "Bills paid regularly",
+   "transform": "identity",
+   "clip": [
+    0,
+    1
+   ],
+   "mean": 0.68816782,
+   "std": 0.1390679,
+   "weight": -0.3363741,
+   "actionable": true,
+   "p05": 0.443637,
+   "p50": 0.703648,
+   "p95": 0.891104
+  },
+  {
+   "key": "savings_rate",
+   "label": "Income saved or invested",
+   "transform": "identity",
+   "clip": [
+    0,
+    0.5
+   ],
+   "mean": 0.02390497,
+   "std": 0.04689017,
+   "weight": -0.25301262,
+   "actionable": true,
+   "p05": 0.0,
+   "p50": 0.004029,
+   "p95": 0.104485
+  },
+  {
+   "key": "pre_income_buffer",
+   "label": "Balance left before income arrives",
+   "transform": "log1p",
+   "clip": [
+    0,
+    10
+   ],
+   "mean": 0.94523917,
+   "std": 0.4952513,
+   "weight": -0.00193296,
+   "actionable": true,
+   "p05": 0.258054,
+   "p50": 0.875319,
+   "p95": 1.927974
+  }
+ ],
+ "scale": {
+  "base_score": 650,
+  "base_odds": 4.0,
+  "pdo": 50
+ },
+ "bands": [
+  {
+   "band": "A",
+   "max_pd": 0.06
+  },
+  {
+   "band": "B",
+   "max_pd": 0.11
+  },
+  {
+   "band": "C",
+   "max_pd": 0.18
+  },
+  {
+   "band": "D",
+   "max_pd": 0.3
+  },
+  {
+   "band": "E",
+   "max_pd": 1.0
+  }
+ ],
+ "policy": {
+  "approve_max_pd": 0.11,
+  "review_max_pd": 0.22
+ },
+ "rates": {
+  "A": 18.0,
+  "B": 19.5,
+  "C": 21.0,
+  "D": 22.5,
+  "E": 24.0
+ }
+}

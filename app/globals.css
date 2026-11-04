@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-inter), var(--font-deva), var(--font-telugu), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+
+  --color-accent-50: #f0f3ff;
+  --color-accent-100: #e0e6ff;
+  --color-accent-200: #c3cdfd;
+  --color-accent-500: #4a66e8;
+  --color-accent-600: #3350d6;
+  --color-accent-700: #2a41b0;
+  --color-accent-800: #23368c;
+
+  --color-ink: #0b0c0e;
+  --color-line: #e6e7ea;
+  --color-line-strong: #d4d6db;
+  --color-canvas: #fafafa;
+
+  --color-positive: #15803d;
+  --color-positive-bg: #ecfdf3;
+  --color-caution: #b45309;
+  --color-caution-bg: #fff8eb;
+  --color-negative: #b91c1c;
+  --color-negative-bg: #fef2f2;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "cv11", "ss01";
+  }
+  body {
+    @apply bg-white text-ink;
+  }
+  ::selection {
+    @apply bg-accent-100;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-accent-600);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  input[type="range"] {
+    accent-color: var(--color-accent-600);
+  }
+}
+
+@utility tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+@utility container-page {
+  width: 100%;
+  max-width: 1200px;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+  @media (width >= 48rem) {
+    padding-inline: 2rem;
+  }
+}
+
+/* recharts: no focus ring on the svg wrapper when clicked */
+.recharts-wrapper:focus,
+.recharts-surface:focus {
+  outline: none;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 18mm 16mm;
+  }
+  body {
+    background: white;
+  }
+}

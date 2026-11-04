@@ -1,0 +1,543 @@
+{
+ "version": "2.0",
+ "data": {
+  "description": "Synthetic Indian bank/UPI statements from a persona-based simulator (salaried, gig workers, shopkeepers, farmers, students, homemakers) with bank-specific narration formats (SBI, HDFC, ICICI, Axis, Kotak, Canara, Bank of Baroda, PNB), truncation and typos.",
+  "n_applicants": 6000,
+  "n_transactions": 2852088,
+  "synthetic": true,
+  "default_rate": 0.2018,
+  "default_rate_by_persona": {
+   "farmer": 0.2616,
+   "gig_worker": 0.2284,
+   "homemaker": 0.1791,
+   "salaried": 0.1396,
+   "shopkeeper": 0.2035,
+   "student": 0.2128
+  },
+  "history_months": "6–12 per applicant",
+  "simulator_notes": [
+   "Hidden traits (money discipline, repayment priority, income-shock risk, liquidity stress, betting and loan-app propensity) drive what appears in the statement: bill timing, NACH/ECS bounces with return charges, minimum-balance penalties, instant-loan-app borrowing, betting, savings and balances.",
+   "Default is simulated over a separate future 12-month window from the hidden traits plus fresh income shocks and individual noise, so it is not a deterministic function of statement features.",
+   "Default rates are calibrated per persona (≈14–26%); gender is simulated only for the fairness audit.",
+   "Categorizer corpus and risk population use disjoint simulator seeds."
+  ]
+ },
+ "categorizer": {
+  "model": "char 3-5gram + word TF-IDF (sublinear, l2) → multinomial logistic regression",
+  "accuracy": 0.8598,
+  "macro_f1": 0.7965,
+  "eval": "held-out unseen merchants/counterparties (25% of merchants per category never seen in training)",
+  "n_train": 68469,
+  "n_test": 33115,
+  "n_features": 12000,
+  "in_population_agreement": 0.9876,
+  "per_class": [
+   {
+    "category": "salary",
+    "f1": 0.9491,
+    "support": 618
+   },
+   {
+    "category": "gig_income",
+    "f1": 0.7592,
+    "support": 2759
+   },
+   {
+    "category": "business_income",
+    "f1": 0.9169,
+    "support": 3026
+   },
+   {
+    "category": "agri_income",
+    "f1": 0.932,
+    "support": 251
+   },
+   {
+    "category": "family_transfer_in",
+    "f1": 0.8362,
+    "support": 1370
+   },
+   {
+    "category": "refund_cashback",
+    "f1": 0.9636,
+    "support": 370
+   },
+   {
+    "category": "interest_in",
+    "f1": 0.0,
+    "support": 1
+   },
+   {
+    "category": "rent",
+    "f1": 0.8298,
+    "support": 2278
+   },
+   {
+    "category": "groceries",
+    "f1": 0.8869,
+    "support": 3096
+   },
+   {
+    "category": "utilities",
+    "f1": 0.8751,
+    "support": 1057
+   },
+   {
+    "category": "mobile_recharge",
+    "f1": 0.8042,
+    "support": 216
+   },
+   {
+    "category": "fuel_transport",
+    "f1": 0.4819,
+    "support": 837
+   },
+   {
+    "category": "food_delivery",
+    "f1": 0.6483,
+    "support": 1003
+   },
+   {
+    "category": "shopping",
+    "f1": 0.2478,
+    "support": 1073
+   },
+   {
+    "category": "healthcare",
+    "f1": 0.7243,
+    "support": 316
+   },
+   {
+    "category": "education",
+    "f1": 0.741,
+    "support": 158
+   },
+   {
+    "category": "emi_loan",
+    "f1": 0.863,
+    "support": 253
+   },
+   {
+    "category": "loan_app",
+    "f1": 0.7925,
+    "support": 224
+   },
+   {
+    "category": "insurance",
+    "f1": 1.0,
+    "support": 189
+   },
+   {
+    "category": "investment_savings",
+    "f1": 0.9668,
+    "support": 103
+   },
+   {
+    "category": "betting_gaming",
+    "f1": 0.82,
+    "support": 236
+   },
+   {
+    "category": "cash_withdrawal",
+    "f1": 1.0,
+    "support": 296
+   },
+   {
+    "category": "bank_charges",
+    "f1": 0.6667,
+    "support": 1
+   },
+   {
+    "category": "bounce_charge",
+    "f1": 1.0,
+    "support": 1
+   },
+   {
+    "category": "transfer_out",
+    "f1": 0.902,
+    "support": 5422
+   },
+   {
+    "category": "transfer_in_other",
+    "f1": 0.904,
+    "support": 5351
+   },
+   {
+    "category": "other",
+    "f1": 0.9944,
+    "support": 2610
+   }
+  ],
+  "runtime_parity_max_abs_diff": 5.9227368087722e-06
+ },
+ "risk": {
+  "model": "standardized logistic regression scorecard (sign-constrained)",
+  "cv": "5-fold stratified, out-of-fold predictions",
+  "benchmark": {
+   "logistic_scorecard": {
+    "auc": 0.7194,
+    "ks": 0.3294,
+    "gini": 0.4388,
+    "brier": 0.1459
+   },
+   "woe_scorecard": {
+    "auc": 0.7277,
+    "ks": 0.3485,
+    "gini": 0.4553,
+    "brier": 0.1426
+   },
+   "hist_gradient_boosting": {
+    "auc": 0.7172,
+    "ks": 0.328,
+    "gini": 0.4343,
+    "brier": 0.146
+   }
+  },
+  "auc": 0.7194,
+  "ks": 0.3294,
+  "gini": 0.4388,
+  "brier": 0.1459,
+  "calibration": [
+   {
+    "bin_pred": 0.0612,
+    "bin_obs": 0.0533,
+    "n": 600
+   },
+   {
+    "bin_pred": 0.091,
+    "bin_obs": 0.08,
+    "n": 600
+   },
+   {
+    "bin_pred": 0.1131,
+    "bin_obs": 0.1033,
+    "n": 600
+   },
+   {
+    "bin_pred": 0.1327,
+    "bin_obs": 0.09,
+    "n": 600
+   },
+   {
+    "bin_pred": 0.1553,
+    "bin_obs": 0.1617,
+    "n": 600
+   },
+   {
+    "bin_pred": 0.1817,
+    "bin_obs": 0.2017,
+    "n": 600
+   },
+   {
+    "bin_pred": 0.2149,
+    "bin_obs": 0.2283,
+    "n": 600
+   },
+   {
+    "bin_pred": 0.2551,
+    "bin_obs": 0.2767,
+    "n": 600
+   },
+   {
+    "bin_pred": 0.3145,
+    "bin_obs": 0.3467,
+    "n": 600
+   },
+   {
+    "bin_pred": 0.4992,
+    "bin_obs": 0.4767,
+    "n": 600
+   }
+  ],
+  "by_persona": [
+   {
+    "persona": "farmer",
+    "auc": 0.6486,
+    "n": 906,
+    "approval_rate": 0.2373,
+    "default_rate": 0.2616
+   },
+   {
+    "persona": "gig_worker",
+    "auc": 0.7452,
+    "n": 1353,
+    "approval_rate": 0.1434,
+    "default_rate": 0.2284
+   },
+   {
+    "persona": "homemaker",
+    "auc": 0.7094,
+    "n": 748,
+    "approval_rate": 0.2727,
+    "default_rate": 0.1791
+   },
+   {
+    "persona": "salaried",
+    "auc": 0.7315,
+    "n": 1325,
+    "approval_rate": 0.3155,
+    "default_rate": 0.1396
+   },
+   {
+    "persona": "shopkeeper",
+    "auc": 0.7076,
+    "n": 963,
+    "approval_rate": 0.2523,
+    "default_rate": 0.2035
+   },
+   {
+    "persona": "student",
+    "auc": 0.7358,
+    "n": 705,
+    "approval_rate": 0.2099,
+    "default_rate": 0.2128
+   }
+  ],
+  "ablations": [
+   {
+    "name": "Bureau-like: has existing EMI + any bounce",
+    "auc": 0.6144
+   },
+   {
+    "name": "Income only (level, variability, regularity)",
+    "auc": 0.5454
+   },
+   {
+    "name": "Cash-flow without balance features",
+    "auc": 0.7105
+   },
+   {
+    "name": "Full cash-flow scorecard (deployed)",
+    "auc": 0.7194
+   }
+  ],
+  "feature_importance": [
+   {
+    "key": "buffer_months",
+    "label": "Savings buffer (months of income)",
+    "importance": 0.2032,
+    "weight": -0.34261665
+   },
+   {
+    "key": "bill_regularity",
+    "label": "Bills paid regularly",
+    "importance": 0.1995,
+    "weight": -0.3363741
+   },
+   {
+    "key": "foir",
+    "label": "Income already going to EMIs",
+    "importance": 0.1608,
+    "weight": 0.27110949
+   },
+   {
+    "key": "savings_rate",
+    "label": "Income saved or invested",
+    "importance": 0.1501,
+    "weight": -0.25301262
+   },
+   {
+    "key": "loan_app_rate",
+    "label": "Instant loan app use per month",
+    "importance": 0.078,
+    "weight": 0.13156657
+   },
+   {
+    "key": "bounce_rate",
+    "label": "Bounced payments per month",
+    "importance": 0.0759,
+    "weight": 0.1279863
+   },
+   {
+    "key": "income_cv",
+    "label": "Income variability",
+    "importance": 0.0547,
+    "weight": 0.09229608
+   },
+   {
+    "key": "net_cashflow_ratio",
+    "label": "Money left over each month",
+    "importance": 0.0502,
+    "weight": -0.0846519
+   },
+   {
+    "key": "betting_share",
+    "label": "Spend on betting & gaming",
+    "importance": 0.0263,
+    "weight": 0.04430496
+   },
+   {
+    "key": "pre_income_buffer",
+    "label": "Balance left before income arrives",
+    "importance": 0.0011,
+    "weight": -0.00193296
+   }
+  ],
+  "bands": [
+   {
+    "band": "A",
+    "n": 237,
+    "default_rate": 0.0633,
+    "max_pd": 0.06,
+    "rate_pct": 18.0
+   },
+   {
+    "band": "B",
+    "n": 1185,
+    "default_rate": 0.0717,
+    "max_pd": 0.11,
+    "rate_pct": 19.5
+   },
+   {
+    "band": "C",
+    "n": 1848,
+    "default_rate": 0.1337,
+    "max_pd": 0.18,
+    "rate_pct": 21.0
+   },
+   {
+    "band": "D",
+    "n": 1741,
+    "default_rate": 0.243,
+    "max_pd": 0.3,
+    "rate_pct": 22.5
+   },
+   {
+    "band": "E",
+    "n": 989,
+    "default_rate": 0.4459,
+    "max_pd": 1.0,
+    "rate_pct": 24.0
+   }
+  ],
+  "policy": {
+   "approve_rate": 0.237,
+   "review_rate": 0.4277,
+   "decline_rate": 0.3353,
+   "approved_default_rate": 0.0703,
+   "declined_default_rate": 0.3559,
+   "approve_max_pd": 0.11,
+   "review_max_pd": 0.22
+  },
+  "score_scale": "300–900; 650 at 4:1 good:bad odds, 50 points to double the odds",
+  "features_dropped_for_sign_consistency": [
+   "income_monthly_median",
+   "income_months_ratio",
+   "income_sources",
+   "low_balance_days",
+   "discretionary_share",
+   "cash_share",
+   "bank_charge_rate"
+  ],
+  "runtime_parity_max_abs_diff": 3.983460650225368e-08
+ },
+ "fairness": {
+  "by_gender": [
+   {
+    "gender": "F",
+    "n": 1927,
+    "default_rate": 0.1811,
+    "auc": 0.708,
+    "mean_pd": 0.1917,
+    "approval_rate": 0.2538,
+    "good_payer_approval_rate": 0.2864,
+    "approved_default_rate": 0.0757
+   },
+   {
+    "gender": "M",
+    "n": 4073,
+    "default_rate": 0.2116,
+    "auc": 0.7221,
+    "mean_pd": 0.2067,
+    "approval_rate": 0.2291,
+    "good_payer_approval_rate": 0.2709,
+    "approved_default_rate": 0.0675
+   }
+  ],
+  "by_persona": [
+   {
+    "persona": "farmer",
+    "n": 906,
+    "default_rate": 0.2616,
+    "auc": 0.6486,
+    "mean_pd": 0.2652,
+    "approval_rate": 0.2373,
+    "good_payer_approval_rate": 0.278,
+    "approved_default_rate": 0.1349
+   },
+   {
+    "persona": "gig_worker",
+    "n": 1353,
+    "default_rate": 0.2284,
+    "auc": 0.7452,
+    "mean_pd": 0.2203,
+    "approval_rate": 0.1434,
+    "good_payer_approval_rate": 0.1724,
+    "approved_default_rate": 0.0722
+   },
+   {
+    "persona": "homemaker",
+    "n": 748,
+    "default_rate": 0.1791,
+    "auc": 0.7094,
+    "mean_pd": 0.1795,
+    "approval_rate": 0.2727,
+    "good_payer_approval_rate": 0.3111,
+    "approved_default_rate": 0.0637
+   },
+   {
+    "persona": "salaried",
+    "n": 1325,
+    "default_rate": 0.1396,
+    "auc": 0.7315,
+    "mean_pd": 0.17,
+    "approval_rate": 0.3155,
+    "good_payer_approval_rate": 0.3509,
+    "approved_default_rate": 0.0431
+   },
+   {
+    "persona": "shopkeeper",
+    "n": 963,
+    "default_rate": 0.2035,
+    "auc": 0.7076,
+    "mean_pd": 0.1744,
+    "approval_rate": 0.2523,
+    "good_payer_approval_rate": 0.2999,
+    "approved_default_rate": 0.0535
+   },
+   {
+    "persona": "student",
+    "n": 705,
+    "default_rate": 0.2128,
+    "auc": 0.7358,
+    "mean_pd": 0.2062,
+    "approval_rate": 0.2099,
+    "good_payer_approval_rate": 0.2432,
+    "approved_default_rate": 0.0878
+   }
+  ],
+  "notes": "Gender is never a model input; it is simulated only to audit outcomes. Approval rate female 25% vs male 23% (ratio 1.11); approval among applicants who repaid: female 29% vs male 27%. Differences by persona mostly track genuinely different simulated default rates; seasonal (farm) income is measured on full months to avoid penalising lumpy-but-adequate earnings."
+ },
+ "external_validation": {
+  "dataset": "Statlog German Credit (OpenML credit-g, 1,000 real applicants)",
+  "alt_only_auc": 0.7512,
+  "bureau_only_auc": 0.6246,
+  "combined_auc": 0.7725,
+  "gbm_combined_auc": 0.7805,
+  "thin_file": {
+   "n": 89,
+   "bad_rate": 0.5955,
+   "alt_only_auc": 0.6824,
+   "bureau_only_auc": 0.3381
+  },
+  "note": "Real-data check that non-bureau signals rank risk where bureau history is thin; 5-fold CV."
+ },
+ "limitations": [
+  "The risk model is trained on simulated statements; it must be re-fitted and validated on real repayment outcomes before lending decisions.",
+  "Narration formats vary by bank and change over time; unseen merchants are categorised less accurately (see per-class F1).",
+  "Cash deposits and transfers from individuals cannot be verified as income and are counted conservatively.",
+  "Six months of history may miss seasonal income (harvests); farm income is judged on the average month.",
+  "Fairness was audited on simulated gender and persona labels only; a real deployment needs audits on real outcomes.",
+  "Scores describe repayment risk from cash flow only; identity/KYC and fraud checks happen separately."
+ ]
+}

@@ -3,3 +3,8 @@ __pycache__/
 video/node_modules
 video/out
 .DS_Store
+.venv/
+node_modules/
+.next/
+tsconfig.tsbuildinfo
+next-env.d.ts

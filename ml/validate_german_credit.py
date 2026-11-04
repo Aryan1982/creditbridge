@@ -1,9 +1,11 @@
-"""CreditBridge training pipeline.
+"""External validation on the Statlog German Credit dataset (OpenML `credit-g`).
 
-Trains an explainable logistic-regression scorecard on the Statlog German Credit
-dataset (OpenML `credit-g`), benchmarks it against gradient boosting and against
-bureau-only / alternative-data-only feature sets, audits fairness, and exports a
-self-contained model JSON consumed by the browser app in ../public.
+Trains an explainable logistic-regression scorecard, benchmarks it against
+gradient boosting and against bureau-only / alternative-data-only feature sets,
+and audits fairness. This is a *real-data* sanity check that alternative
+(non-bureau) signals carry predictive power for thin-file applicants; results are
+written to ml/results/german_credit.json and surfaced in the CreditBridge model
+card (they do not drive runtime scoring).
 """
 
 from __future__ import annotations
@@ -30,7 +32,7 @@ from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder, StandardScaler
 
 SEED = 42
 ROOT = Path(__file__).resolve().parent.parent
-OUT = ROOT / "public" / "model.json"
+OUT = ROOT / "ml" / "results" / "german_credit.json"
 
 # Features a traditional credit bureau would hold.
 BUREAU = ["credit_history", "existing_credits", "other_payment_plans"]
@@ -71,7 +73,7 @@ def load() -> tuple[pd.DataFrame, np.ndarray]:
 
 
 def split_types(df: pd.DataFrame, cols: list[str]) -> tuple[list[str], list[str]]:
-    cat = [c for c in cols if df[c].dtype == object]
+    cat = [c for c in cols if not pd.api.types.is_numeric_dtype(df[c])]
     num = [c for c in cols if c not in cat]
     return cat, num
 
@@ -251,6 +253,7 @@ def main() -> None:
     drift = np.max(np.abs(1 / (1 + np.exp(-logits)) - final.predict_proba(X)[:, 1]))
     assert drift < 1e-3, f"exported scorecard drifted from sklearn model: {drift}"
 
+    OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(
         json.dumps(
             {

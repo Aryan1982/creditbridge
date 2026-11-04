@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CreditBridge — Explainable credit scoring for the unbanked</title>
+<style>
+:root{--bg:#0b1020;--card:#131a30;--line:#24304f;--fg:#e8ecf7;--mut:#93a0c0;--acc:#5b8cff;--ok:#2ecc8f;--bad:#ff5d6c;--warn:#ffb547}
+*{box-sizing:border-box}body{margin:0;font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--fg)}
+header{padding:28px 32px 8px}h1{margin:0;font-size:28px}h1 span{color:var(--acc)}header p{margin:4px 0;color:var(--mut)}
+main{display:grid;grid-template-columns:minmax(320px,420px) 1fr;gap:20px;padding:20px 32px 40px}
+@media(max-width:900px){main{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+h2{font-size:16px;margin:0 0 12px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}
+label{display:block;font-size:13px;color:var(--mut);margin:8px 0 3px}
+select,input{width:100%;padding:8px 10px;background:#0e1426;color:var(--fg);border:1px solid var(--line);border-radius:8px;font:inherit}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tag{font-size:10px;padding:1px 6px;border-radius:6px;margin-left:6px;vertical-align:middle}
+.tag.b{background:#3a2a55;color:#c9a8ff}.tag.a{background:#173d33;color:#7be3bb}
+.score{display:flex;align-items:center;gap:24px}
+.big{font-size:56px;font-weight:700;line-height:1}
+.decision{font-size:20px;font-weight:700;padding:6px 14px;border-radius:10px;display:inline-block}
+.decision.ok{background:#123e2e;color:var(--ok)}.decision.no{background:#401a22;color:var(--bad)}
+.bar{height:10px;background:#0e1426;border-radius:6px;overflow:hidden;margin-top:10px}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--bad),var(--warn),var(--ok))}
+.reasons li{margin:6px 0}.pos{color:var(--ok)}.neg{color:var(--bad)}
+.contrib{display:grid;grid-template-columns:180px 1fr 60px;gap:8px;align-items:center;font-size:13px;margin:4px 0}
+.track{position:relative;height:12px;background:#0e1426;border-radius:4px}.track b{position:absolute;top:0;height:100%;border-radius:4px}
+.track:after{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--line)}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}th{color:var(--mut);font-weight:500}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}@media(max-width:1200px){.grid2{grid-template-columns:1fr}}
+.cf li{margin:6px 0}.mut{color:var(--mut);font-size:13px}
+.langs button{background:#0e1426;border:1px solid var(--line);color:var(--fg);border-radius:8px;padding:4px 10px;cursor:pointer;margin-left:4px}.langs button.on{border-color:var(--acc);color:var(--acc)}
+footer{padding:0 32px 32px;color:var(--mut);font-size:12px}
+</style>
+</head>
+<body>
+<header>
+<h1>Credit<span>Bridge</span></h1>
+<p>Explainable alternative-data credit scoring for thin-file &amp; unbanked applicants · Neural Storm 2026 · HI-04</p>
+</header>
+<main>
+<section class="card">
+<h2>Applicant</h2>
+<div class="mut">Tags: <span class="tag b">bureau</span> traditional credit-bureau data · <span class="tag a">alt</span> alternative data. Sex and nationality are never used.</div>
+<form id="form"></form>
+</section>
+<section style="display:grid;gap:20px;align-content:start">
+<div class="card">
+<div style="display:flex;justify-content:space-between;align-items:center"><h2>Decision</h2><div class="langs" id="langs"></div></div>
+<div class="score"><div><div class="big" id="points">–</div><div class="mut">CreditBridge score (300–900)</div></div>
+<div><div class="decision" id="decision">–</div><div class="mut" id="pd"></div></div></div>
+<div class="bar"><i id="barfill" style="width:0"></i></div>
+<h2 style="margin-top:18px">Why</h2><ul class="reasons" id="reasons"></ul>
+</div>
+<div class="grid2">
+<div class="card"><h2>What would change the outcome</h2><ul class="cf" id="cf"></ul><div class="mut">Greedy counterfactual search over actionable features only (no age, no history rewriting).</div></div>
+<div class="card"><h2>Feature contributions (log-odds)</h2><div id="contrib"></div><div class="mut">Green lowers default risk, red raises it. Exact additive attributions of the scorecard.</div></div>
+</div>
+<div class="grid2">
+<div class="card"><h2>Model performance (5-fold CV)</h2><table id="perf"></table><div class="mut" id="thin"></div></div>
+<div class="card"><h2>Fairness audit</h2><table id="fair"></table><div class="mut">Protected attributes excluded from training; audited post hoc on out-of-fold predictions.</div></div>
+</div>
+</section>
+</main>
+<footer>Prototype for research and demonstration only — not a lending decision. No applicant data leaves your browser. Trained on the public Statlog German Credit dataset; see README for limitations.</footer>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,261 @@
+{
+ "dataset": "Statlog German Credit (OpenML credit-g), 1000 applicants, 30% default",
+ "threshold": 0.461,
+ "bureau_features": [
+  "credit_history",
+  "existing_credits",
+  "other_payment_plans"
+ ],
+ "alternative_features": [
+  "checking_status",
+  "savings_status",
+  "employment",
+  "residence_since",
+  "property_magnitude",
+  "housing",
+  "job",
+  "num_dependents",
+  "own_telephone",
+  "duration",
+  "credit_amount",
+  "installment_commitment",
+  "purpose",
+  "other_parties",
+  "age"
+ ],
+ "excluded_protected": [
+  "personal_status",
+  "foreign_worker"
+ ],
+ "scorecard": {
+  "intercept": -0.37691,
+  "features": {
+   "credit_history": {
+    "type": "cat",
+    "levels": {
+     "all paid": 0.98101,
+     "critical/other existing credit": -0.64403,
+     "delayed previously": -0.03581,
+     "existing paid": 0.21706,
+     "no credits/all paid": 0.71852
+    }
+   },
+   "other_payment_plans": {
+    "type": "cat",
+    "levels": {
+     "bank": 0.54922,
+     "none": -0.11595,
+     "stores": 0.38389
+    }
+   },
+   "checking_status": {
+    "type": "cat",
+    "levels": {
+     "0<=X<200": 0.47807,
+     "<0": 0.81964,
+     ">=200": 0.00371,
+     "no checking": -0.897
+    }
+   },
+   "savings_status": {
+    "type": "cat",
+    "levels": {
+     "100<=X<500": -0.10988,
+     "500<=X<1000": -0.02382,
+     "<100": 0.26046,
+     ">=1000": -0.89347,
+     "no known savings": -0.55384
+    }
+   },
+   "employment": {
+    "type": "cat",
+    "levels": {
+     "1<=X<4": 0.10455,
+     "4<=X<7": -0.59284,
+     "<1": 0.30912,
+     ">=7": -0.03892,
+     "unemployed": 0.39342
+    }
+   },
+   "property_magnitude": {
+    "type": "cat",
+    "levels": {
+     "car": 0.00583,
+     "life insurance": 0.06246,
+     "no known property": 0.27284,
+     "real estate": -0.20724
+    }
+   },
+   "housing": {
+    "type": "cat",
+    "levels": {
+     "for free": -0.02563,
+     "own": -0.09045,
+     "rent": 0.37574
+    }
+   },
+   "job": {
+    "type": "cat",
+    "levels": {
+     "high qualif/self emp/mgmt": 0.06143,
+     "skilled": 0.02043,
+     "unemp/unskilled non res": -0.65382,
+     "unskilled resident": -0.03789
+    }
+   },
+   "own_telephone": {
+    "type": "cat",
+    "levels": {
+     "none": 0.11645,
+     "yes": -0.17179
+    }
+   },
+   "purpose": {
+    "type": "cat",
+    "levels": {
+     "business": 0.04264,
+     "domestic appliance": 0.19053,
+     "education": 0.81169,
+     "furniture/equipment": -0.03689,
+     "new car": 0.5849,
+     "other": -1.01428,
+     "radio/tv": -0.21694,
+     "repairs": 0.64139,
+     "retraining": -1.13639,
+     "used car": -1.05013
+    }
+   },
+   "other_parties": {
+    "type": "cat",
+    "levels": {
+     "co applicant": 0.4415,
+     "guarantor": -0.99658,
+     "none": 0.03718
+    }
+   },
+   "existing_credits": {
+    "type": "num",
+    "weight": 0.267448,
+    "mean": 1.407,
+    "min": 1.0,
+    "max": 4.0
+   },
+   "residence_since": {
+    "type": "num",
+    "weight": -0.010717,
+    "mean": 2.845,
+    "min": 1.0,
+    "max": 4.0
+   },
+   "num_dependents": {
+    "type": "num",
+    "weight": 0.022212,
+    "mean": 1.155,
+    "min": 1.0,
+    "max": 2.0
+   },
+   "duration": {
+    "type": "num",
+    "weight": 0.028117,
+    "mean": 20.903,
+    "min": 4.0,
+    "max": 72.0
+   },
+   "credit_amount": {
+    "type": "num",
+    "weight": 0.000113,
+    "mean": 3271.258,
+    "min": 250.0,
+    "max": 18424.0
+   },
+   "installment_commitment": {
+    "type": "num",
+    "weight": 0.262354,
+    "mean": 2.973,
+    "min": 1.0,
+    "max": 4.0
+   },
+   "age": {
+    "type": "num",
+    "weight": -0.016558,
+    "mean": 35.546,
+    "min": 19.0,
+    "max": 75.0
+   }
+  }
+ },
+ "metrics": {
+  "cv": "5-fold stratified, out-of-fold",
+  "models": {
+   "logreg_combined": {
+    "roc_auc": 0.7725,
+    "ks": 0.431,
+    "brier": 0.1942,
+    "accuracy": 0.703,
+    "f1_bad": 0.6013
+   },
+   "gbm_combined": {
+    "roc_auc": 0.7784,
+    "ks": 0.4314,
+    "brier": 0.176,
+    "accuracy": 0.726,
+    "f1_bad": 0.6017
+   },
+   "logreg_bureau_only": {
+    "roc_auc": 0.6246,
+    "ks": 0.1919,
+    "brier": 0.2335,
+    "accuracy": 0.477,
+    "f1_bad": 0.5061
+   },
+   "logreg_alternative_only": {
+    "roc_auc": 0.7512,
+    "ks": 0.4167,
+    "brier": 0.2025,
+    "accuracy": 0.697,
+    "f1_bad": 0.5933
+   }
+  },
+  "thin_file_auc": {
+   "n": 89,
+   "bad_rate": 0.5955,
+   "logreg_combined": 0.6436,
+   "logreg_bureau_only": 0.3381,
+   "logreg_alternative_only": 0.6824
+  },
+  "fairness": {
+   "sex": {
+    "groups": {
+     "female": {
+      "n": 310,
+      "approval_rate": 0.5323,
+      "good_payer_approval_rate": 0.6965
+     },
+     "male": {
+      "n": 690,
+      "approval_rate": 0.5652,
+      "good_payer_approval_rate": 0.6794
+     }
+    },
+    "demographic_parity_ratio": 0.9418,
+    "equal_opportunity_diff": 0.0171
+   },
+   "age": {
+    "groups": {
+     "25_plus": {
+      "n": 851,
+      "approval_rate": 0.5875,
+      "good_payer_approval_rate": 0.7075
+     },
+     "under_25": {
+      "n": 149,
+      "approval_rate": 0.3691,
+      "good_payer_approval_rate": 0.5227
+     }
+    },
+    "demographic_parity_ratio": 0.6283,
+    "equal_opportunity_diff": 0.1848
+   }
+  }
+ }
+}

@@ -20,8 +20,9 @@ export type Metrics = {
     transactions: number;
     synthetic: boolean;
   };
-  /** Real-data check on Statlog German Credit, if present. */
+  /** Real-data check on a public credit dataset (Statlog German Credit), if present. */
   external: {
+    dataset: string;
     altAuc: number;
     bureauAuc: number;
     thinAltAuc: number | null;
@@ -30,6 +31,8 @@ export type Metrics = {
   } | null;
   /** Approval rates by simulated gender (audit only, never a model input). */
   fairness: {female: number; male: number} | null;
+  /** Stated limitations, verbatim from the model card. */
+  limitations: string[];
 };
 
 export type MetricsSource = 'model_card.json' | 'placeholder';
@@ -39,8 +42,16 @@ export const FALLBACK_METRICS: Metrics = {
   risk: {auc: 0.72, ks: 0.33, gini: 0.44, gbmAuc: 0.72},
   categorizer: {accuracy: 0.86, macroF1: 0.8},
   data: {applicants: 6000, transactions: 2_850_000, synthetic: true},
-  external: {altAuc: 0.75, bureauAuc: 0.62, thinAltAuc: 0.68, thinBureauAuc: 0.34, thinN: 89},
+  external: {
+    dataset: 'Statlog German Credit (OpenML credit-g, 1,000 real applicants)',
+    altAuc: 0.75,
+    bureauAuc: 0.62,
+    thinAltAuc: 0.68,
+    thinBureauAuc: 0.34,
+    thinN: 89,
+  },
   fairness: null,
+  limitations: ['The risk model is trained on simulated statements; it must be re-fitted and validated on real repayment outcomes before lending decisions.'],
 };
 
 type Obj = Record<string, unknown>;
@@ -81,6 +92,7 @@ export const parseModelCard = (raw: unknown): Metrics | null => {
     external:
       altAuc !== null && bureauAuc !== null
         ? {
+            dataset: typeof ext?.dataset === 'string' ? ext.dataset : 'External dataset',
             altAuc,
             bureauAuc,
             thinAltAuc: num(thin?.alt_only_auc),
@@ -89,6 +101,9 @@ export const parseModelCard = (raw: unknown): Metrics | null => {
           }
         : null,
     fairness: female !== null && male !== null ? {female, male} : null,
+    limitations: Array.isArray(card?.limitations)
+      ? card.limitations.filter((l): l is string => typeof l === 'string')
+      : FALLBACK_METRICS.limitations,
   };
 };
 

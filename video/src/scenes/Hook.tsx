@@ -1,17 +1,16 @@
-import {interpolate, spring, useCurrentFrame, useVideoConfig, Easing} from 'remotion';
+import {Easing, interpolate, spring, useCurrentFrame, useVideoConfig} from 'remotion';
 import {Appear, Scene} from '../components/ui';
 import {theme} from '../theme';
 
 export const Hook: React.FC<{duration: number}> = ({duration}) => {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
-  const count = interpolate(frame, [10, 70], [0, 190], {
+  const count = interpolate(frame, [8, 60], [0, 190], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: Easing.out(Easing.cubic),
   });
-  const stamp = spring({frame: frame - 120, fps, config: {damping: 12, stiffness: 180}});
-  const stampScale = interpolate(stamp, [0, 1], [2.2, 1]);
+  const stamp = spring({frame: frame - 95, fps, config: {damping: 12, stiffness: 180}});
   return (
     <Scene duration={duration} style={{justifyContent: 'center', alignItems: 'center', textAlign: 'center'}}>
       <div
@@ -29,20 +28,23 @@ export const Hook: React.FC<{duration: number}> = ({duration}) => {
       >
         {Math.round(count)}M
       </div>
-      <Appear delay={45}>
-        <div style={{fontSize: 72, fontWeight: 700, marginTop: 20}}>Indian adults have no credit score.</div>
+      <Appear delay={36}>
+        <div style={{fontSize: 72, fontWeight: 700, marginTop: 20}}>Indian adults are credit-invisible.</div>
+      </Appear>
+      <Appear delay={56}>
+        <div style={{fontSize: 38, color: theme.muted, marginTop: 18}}>No loan history, so no bureau score.</div>
       </Appear>
       <div
         style={{
-          marginTop: 70,
+          marginTop: 60,
           opacity: stamp,
-          transform: `scale(${stampScale}) rotate(-4deg)`,
-          fontSize: 96,
+          transform: `scale(${interpolate(stamp, [0, 1], [2.2, 1])}) rotate(-4deg)`,
+          fontSize: 88,
           fontWeight: 900,
           color: theme.bad,
           border: `8px solid ${theme.bad}`,
           borderRadius: 20,
-          padding: '10px 50px',
+          padding: '8px 46px',
           letterSpacing: 4,
           textTransform: 'uppercase',
         }}

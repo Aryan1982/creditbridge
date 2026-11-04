@@ -98,41 +98,26 @@ export const Pill: React.FC<{children: ReactNode; color?: string; style?: CSSPro
   </div>
 );
 
-/** CreditBridge mark: a bridge arc that draws itself. */
-export const BridgeMark: React.FC<{size?: number; delay?: number}> = ({size = 120, delay = 0}) => {
+/** The app's logo (components/logo.tsx): indigo tile with a bridge arc that draws itself. */
+export const LogoMark: React.FC<{size?: number; delay?: number}> = ({size = 120, delay = 0}) => {
   const frame = useCurrentFrame();
-  const draw = interpolate(frame - delay, [0, 35], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-  const arcLen = 260;
+  const pop = useEnter(delay, 14);
+  const arc = interpolate(frame - delay, [8, 36], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  const deck = interpolate(frame - delay, [26, 44], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
   return (
-    <svg width={size} height={size * 0.6} viewBox="0 0 200 120">
-      <defs>
-        <linearGradient id="cbGrad" x1="0" x2="1">
-          <stop offset="0%" stopColor={theme.accent} />
-          <stop offset="100%" stopColor={theme.accent2} />
-        </linearGradient>
-      </defs>
+    <svg width={size} height={size} viewBox="0 0 22 22" style={{transform: `scale(${0.6 + 0.4 * pop})`, opacity: pop, overflow: 'visible'}}>
+      <rect width="22" height="22" rx="6" fill={theme.brand} />
       <path
-        d="M10 100 Q100 -20 190 100"
+        d="M5 15.5C5 11.36 7.69 8 11 8s6 3.36 6 7.5"
         fill="none"
-        stroke="url(#cbGrad)"
-        strokeWidth={12}
+        stroke="#fff"
+        strokeWidth="2"
         strokeLinecap="round"
-        strokeDasharray={arcLen}
-        strokeDashoffset={arcLen * (1 - draw)}
+        pathLength={1}
+        strokeDasharray={1}
+        strokeDashoffset={1 - arc}
       />
-      <line x1={4} x2={196} y1={104} y2={104} stroke={theme.text} strokeOpacity={0.6 * draw} strokeWidth={6} strokeLinecap="round" />
-      {[50, 80, 100, 120, 150].map((x, i) => (
-        <line
-          key={x}
-          x1={x}
-          x2={x}
-          y1={104}
-          y2={x === 100 ? 40 : x === 80 || x === 120 ? 46 : 62}
-          stroke={theme.text}
-          strokeOpacity={0.35 * interpolate(draw, [0.4 + i * 0.1, 0.6 + i * 0.1], [0, 1], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})}
-          strokeWidth={4}
-        />
-      ))}
+      <path d="M4 15.5h14" stroke="#fff" strokeWidth="2" strokeLinecap="round" pathLength={1} strokeDasharray={1} strokeDashoffset={1 - deck} />
     </svg>
   );
 };

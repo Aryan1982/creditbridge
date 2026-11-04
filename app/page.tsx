@@ -1,86 +1,85 @@
-import Link from "next/link";
-import { Badge, ButtonLink } from "@/components/ui";
+import { AppIcon } from "@/components/logo";
+import { ButtonLink, ChevronLink, StatStrip, StatusDot } from "@/components/ui";
 
 const STEPS = [
   {
     title: "Connect a statement",
     body: "Upload a bank statement as PDF or CSV, or share it in one tap through the RBI Account Aggregator network.",
+    icon: "M7 3.5h7l4 4V20a.5.5 0 0 1-.5.5h-10A.5.5 0 0 1 7 20zM14 3.5v4h4M12 17v-6m-2.5 2.5L12 11l2.5 2.5",
   },
   {
-    title: "Verify it is genuine",
-    body: "Running balances, transaction references and document metadata are checked for edits, and circular transfers that inflate income are flagged.",
+    title: "Verify it’s genuine",
+    body: "Running balances, references and document metadata are checked for edits. Circular transfers that inflate income are flagged.",
+    icon: "M12 3l7 3v5.5c0 4.2-3 7.8-7 9-4-1.2-7-4.8-7-9V6zM9 12l2 2 4-4.5",
   },
   {
     title: "Read the cash flow",
-    body: "Every transaction is categorised. Income regularity, spending, existing EMIs, bounces and balance buffers are measured month by month.",
+    body: "Every transaction is categorised. Income regularity, spending, existing EMIs, bounces and buffers are measured month by month.",
+    icon: "M4 20V10m5.3 10V4m5.4 16v-7M20 20V7",
   },
   {
     title: "Decide and explain",
-    body: "A 300–900 score, an affordable EMI and the reasons behind the decision, with concrete steps to qualify for more.",
+    body: "A 300–900 score, an affordable EMI and the reasons behind it, with concrete steps to qualify for more.",
+    icon: "M5 12.5l4 4L19 6.5",
   },
 ];
 
-function Check() {
+function Tick() {
   return (
-    <svg viewBox="0 0 16 16" className="mt-0.5 h-4 w-4 flex-none text-accent-600" aria-hidden="true">
-      <path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    <svg viewBox="0 0 16 16" className="mt-[3px] h-4 w-4 flex-none text-accent" aria-hidden="true">
+      <circle cx="8" cy="8" r="8" fill="currentColor" opacity=".14" />
+      <path d="M4.8 8.3l2.1 2.1 4.3-4.6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
-function PreviewCard() {
+function PreviewWindow() {
   const bars = [62, 70, 58, 74, 66, 79, 71, 83, 77];
   return (
-    <figure className="relative rounded-2xl border border-line bg-white p-5 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_12px_32px_-12px_rgba(16,24,40,0.12)] sm:p-6">
+    <figure className="card mx-auto w-full max-w-[920px] overflow-hidden text-left shadow-sheet!">
       <figcaption className="sr-only">Example of a CreditBridge report</figcaption>
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-[13px] text-zinc-500">Ravi K. · Delivery partner</p>
-          <p className="mt-0.5 text-[13px] text-zinc-500">9 months · 412 transactions</p>
+      <div className="flex items-center gap-2 border-b border-sep px-4 py-3" aria-hidden="true">
+        <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
+        <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
+        <span className="h-3 w-3 rounded-full bg-[#28c840]" />
+        <span className="ml-3 text-[12px] text-faint">Report · Ravi K.</span>
+      </div>
+      <div className="grid gap-6 p-5 sm:p-7 md:grid-cols-[1fr_1.15fr]">
+        <div className="headline">
+          <p className="k">Credit score · Delivery partner</p>
+          <p className="big mt-1">
+            712<small>out of 900</small>
+          </p>
+          <p className="range-line">Band B · 9 months · 412 transactions</p>
+          <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-fill">
+            <div className="h-full rounded-full bg-positive" style={{ width: "68%" }} />
+          </div>
+          <div className="mt-5 flex items-center justify-between">
+            <StatusDot tone="positive">Approved</StatusDot>
+            <span className="text-[13px] text-muted tnum">₹6,800/mo affordable</span>
+          </div>
         </div>
-        <Badge tone="positive" dot>
-          Approved
-        </Badge>
-      </div>
-      <div className="mt-6 flex items-end gap-3">
-        <span className="text-5xl font-semibold tracking-[-0.03em] tnum">712</span>
-        <span className="mb-1.5 text-sm text-zinc-500">Band B · out of 900</span>
-      </div>
-      <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-zinc-100">
-        <div className="h-full rounded-full bg-accent-600" style={{ width: "68%" }} />
-      </div>
-      <div className="mt-6 grid grid-cols-2 gap-4 border-t border-line pt-5 text-sm">
-        <div>
-          <p className="text-zinc-500">Affordable EMI</p>
-          <p className="mt-0.5 font-semibold tnum">₹6,800/mo</p>
-        </div>
-        <div>
-          <p className="text-zinc-500">Statement</p>
-          <p className="mt-0.5 font-semibold">Verified</p>
-        </div>
-      </div>
-      <div className="mt-5 border-t border-line pt-5">
-        <p className="text-[13px] text-zinc-500">Monthly income</p>
-        <div className="mt-3 flex h-16 items-end gap-1.5" aria-hidden="true">
-          {bars.map((h, i) => (
-            <div key={i} className={`flex-1 rounded-[3px] ${i === bars.length - 1 ? "bg-accent-600" : "bg-accent-200"}`} style={{ height: `${h}%` }} />
-          ))}
+        <div className="flex flex-col">
+          <p className="group-title">Monthly income</p>
+          <div className="flex h-[112px] items-end gap-1.5" aria-hidden="true">
+            {bars.map((h, i) => (
+              <div key={i} className={`flex-1 rounded-[4px] ${i === bars.length - 1 ? "bg-accent" : "bg-series-3"}`} style={{ height: `${h}%` }} />
+            ))}
+          </div>
+          <div className="group-list mt-4 text-[13px]">
+            {[
+              ["Income arrived in 9 of 9 months", "positive", "Helps"],
+              ["Existing EMI paid on time", "positive", "Helps"],
+              ["Balance under ₹1,500 in 4 months", "negative", "Hurts"],
+            ].map(([t, tone, l]) => (
+              <div key={t} className="flex items-center justify-between gap-3 px-4 py-2.5">
+                <span className="text-fg-2">{t}</span>
+                <span className={tone === "positive" ? "font-medium text-positive" : "font-medium text-negative"}>{l}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
-      <ul className="mt-5 space-y-2.5 border-t border-line pt-5 text-sm">
-        <li className="flex justify-between gap-4">
-          <span className="text-zinc-700">Income arrived in 9 of 9 months</span>
-          <span className="text-positive">Helps</span>
-        </li>
-        <li className="flex justify-between gap-4">
-          <span className="text-zinc-700">Existing EMI paid on time</span>
-          <span className="text-positive">Helps</span>
-        </li>
-        <li className="flex justify-between gap-4">
-          <span className="text-zinc-700">Balance under ₹1,500 in 4 months</span>
-          <span className="text-negative">Hurts</span>
-        </li>
-      </ul>
     </figure>
   );
 }
@@ -88,138 +87,128 @@ function PreviewCard() {
 export default function Home() {
   return (
     <>
-      <section className="border-b border-line">
-        <div className="container-page grid gap-12 py-16 md:py-24 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-16">
-          <div>
-            <p className="text-[13px] font-medium text-accent-600">Cash-flow underwriting for India</p>
-            <h1 className="mt-4 max-w-[17ch] text-[40px] font-semibold leading-[1.05] tracking-[-0.035em] text-ink sm:text-[56px]">
-              Credit for people the bureau can’t see.
-            </h1>
-            <p className="mt-6 max-w-[52ch] text-[17px] leading-relaxed text-zinc-600">
-              About 190 million Indian adults have no credit score, yet most of them have a bank account that already shows
-              steady income, rent paid on time and money set aside. CreditBridge turns that history into a verified,
-              explainable lending decision.
-            </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <ButtonLink href="/check" size="lg">
-                Check your eligibility
-              </ButtonLink>
-              <ButtonLink href="/lender" size="lg" variant="secondary">
-                Open lender console
-              </ButtonLink>
-            </div>
-            <p className="mt-5 text-[13px] text-zinc-500">No credit history needed. Your statement is analysed in memory and never stored.</p>
-          </div>
-          <div className="mx-auto w-full max-w-md lg:max-w-none">
-            <PreviewCard />
-          </div>
+      <section className="container-page pb-16 pt-16 text-center md:pb-24 md:pt-24">
+        <div className="mx-auto flex w-fit items-center gap-2.5">
+          <AppIcon size={28} />
+          <span className="text-[19px] font-semibold tracking-[-0.02em] text-fg">CreditBridge</span>
+        </div>
+        <h1 className="mx-auto mt-5 text-balance max-w-[15ch] text-[44px] font-bold leading-[1.05] tracking-[-0.04em] text-fg sm:text-[64px] lg:text-[72px]">
+          Credit for people the bureau can’t see.
+        </h1>
+        <p className="mx-auto mt-6 max-w-[40ch] text-[19px] leading-snug text-muted sm:text-[21px]">
+          Your bank statement already proves you pay on time. CreditBridge turns it into a verified, explainable credit decision.
+        </p>
+        <div className="mt-9 flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-7">
+          <ButtonLink href="/check" size="lg">
+            Check your eligibility
+          </ButtonLink>
+          <ChevronLink href="/lender" className="text-[17px]">
+            Open the lender console
+          </ChevronLink>
+        </div>
+        <p className="mt-6 text-[13px] text-faint">No credit history needed · Statements are analysed in memory and never stored</p>
+        <div className="mt-14 md:mt-20">
+          <PreviewWindow />
         </div>
       </section>
 
-      <section aria-labelledby="problem" className="border-b border-line bg-canvas">
-        <div className="container-page py-16 md:py-20">
-          <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr]">
-            <div>
-              <h2 id="problem" className="text-[28px] font-semibold leading-tight tracking-[-0.025em] sm:text-[32px]">
-                No score is not the same as no record.
-              </h2>
-              <p className="mt-4 max-w-[48ch] text-[15px] leading-relaxed text-zinc-600">
-                Gig workers, farmers, shopkeepers and first-time earners are turned away or pushed to instant-loan apps because
-                lenders rely on bureau history they don’t have. Their bank statements tell a fuller story.
-              </p>
-            </div>
-            <dl className="grid gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-3">
-              {[
-                { k: "190M", v: "Indian adults without a usable credit history" },
-                { k: "6–12 mo", v: "of transactions is enough to read income, obligations and buffers" },
-                { k: "0", v: "bureau records needed to reach a decision" },
-              ].map((s) => (
-                <div key={s.k} className="bg-white p-6">
-                  <dt className="text-[28px] font-semibold tracking-[-0.03em] tnum">{s.k}</dt>
-                  <dd className="mt-2 text-sm leading-relaxed text-zinc-600">{s.v}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
+      <section aria-labelledby="problem" className="container-page py-16 md:py-24">
+        <div className="mx-auto max-w-[720px] text-center">
+          <h2 id="problem" className="text-balance text-[34px] font-bold leading-[1.1] tracking-[-0.035em] text-fg sm:text-[48px]">
+            No score isn’t the same as no record.
+          </h2>
+          <p className="mt-5 text-[17px] leading-relaxed text-muted sm:text-[19px]">
+            Gig workers, farmers, shopkeepers and first-time earners are turned away or pushed to instant-loan apps because lenders rely on
+            bureau history they don’t have. Their bank statements tell a fuller story.
+          </p>
         </div>
+        <StatStrip
+          className="mx-auto mt-12 max-w-[960px]"
+          items={[
+            { label: "Credit-invisible adults in India", value: "190M", hint: "No usable bureau history" },
+            { label: "History needed", value: "6–12 months", hint: "Of bank or UPI transactions" },
+            { label: "Bureau records required", value: "None", hint: "Decisions come from cash flow" },
+          ]}
+        />
       </section>
 
-      <section aria-labelledby="how" className="border-b border-line">
-        <div className="container-page py-16 md:py-24">
-          <p className="text-[13px] font-medium text-accent-600">How it works</p>
-          <h2 id="how" className="mt-3 max-w-[24ch] text-[28px] font-semibold leading-tight tracking-[-0.025em] sm:text-[32px]">
+      <section aria-labelledby="how" className="container-page py-16 md:py-24">
+        <div className="text-center">
+          <p className="text-[17px] font-semibold text-accent">How it works</p>
+          <h2 id="how" className="text-balance mx-auto mt-2 max-w-[20ch] text-[34px] font-bold leading-[1.1] tracking-[-0.035em] text-fg sm:text-[48px]">
             From statement to decision in four steps.
           </h2>
-          <ol className="mt-12 grid gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
-            {STEPS.map((s, i) => (
-              <li key={s.title} className="bg-white p-6">
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-line-strong text-[13px] font-medium text-zinc-700 tnum">
-                  {i + 1}
-                </span>
-                <h3 className="mt-5 text-[15px] font-semibold">{s.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-zinc-600">{s.body}</p>
-              </li>
-            ))}
-          </ol>
         </div>
+        <ol className="mt-12 grid gap-[18px] sm:grid-cols-2 lg:grid-cols-4">
+          {STEPS.map((s, i) => (
+            <li key={s.title} className="card flex flex-col p-6">
+              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-accent-soft text-accent">
+                <svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d={s.icon} />
+                </svg>
+              </span>
+              <p className="mt-6 text-[13px] font-medium text-faint tnum">Step {i + 1}</p>
+              <h3 className="mt-1 text-[19px] font-semibold tracking-[-0.02em] text-fg">{s.title}</h3>
+              <p className="mt-2 text-[14px] leading-relaxed text-muted">{s.body}</p>
+            </li>
+          ))}
+        </ol>
       </section>
 
-      <section aria-labelledby="who" className="border-b border-line bg-canvas">
-        <div className="container-page py-16 md:py-24">
-          <p className="text-[13px] font-medium text-accent-600">Who it’s for</p>
-          <h2 id="who" className="mt-3 text-[28px] font-semibold leading-tight tracking-[-0.025em] sm:text-[32px]">
+      <section aria-labelledby="who" className="container-page py-16 md:py-24">
+        <div className="text-center">
+          <p className="text-[17px] font-semibold text-accent">Who it’s for</p>
+          <h2 id="who" className="mt-2 text-[34px] font-bold leading-[1.1] tracking-[-0.035em] text-fg sm:text-[48px]">
             Built for both sides of the loan.
           </h2>
-          <div className="mt-12 grid gap-6 md:grid-cols-2">
-            <article className="flex flex-col rounded-xl border border-line bg-white p-6 sm:p-8">
-              <h3 className="text-lg font-semibold">Borrowers</h3>
-              <p className="mt-2 text-[15px] leading-relaxed text-zinc-600">
-                See whether you qualify before you apply, how much you can comfortably repay, and exactly what would raise your score.
-              </p>
-              <ul className="mt-6 space-y-3 text-sm text-zinc-700">
-                <li className="flex gap-3"><Check />A clear decision with the reasons behind it</li>
-                <li className="flex gap-3"><Check />An EMI sized to your real income</li>
-                <li className="flex gap-3"><Check />Results in English, हिंदी and తెలుగు</li>
-              </ul>
-              <div className="mt-8 pt-2">
-                <Link href="/check" className="text-sm font-medium text-accent-600 hover:text-accent-700">
-                  Check your eligibility →
-                </Link>
-              </div>
-            </article>
-            <article className="flex flex-col rounded-xl border border-line bg-white p-6 sm:p-8">
-              <h3 className="text-lg font-semibold">NBFCs and microfinance lenders</h3>
-              <p className="mt-2 text-[15px] leading-relaxed text-zinc-600">
-                Underwrite thin-file applicants with verified cash-flow evidence, catch edited statements, and document every decision.
-              </p>
-              <ul className="mt-6 space-y-3 text-sm text-zinc-700">
-                <li className="flex gap-3"><Check />Portfolio view with integrity status per applicant</li>
-                <li className="flex gap-3"><Check />Reason codes for every approve, review or decline</li>
-                <li className="flex gap-3"><Check />Published model performance and fairness checks</li>
-              </ul>
-              <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 pt-2">
-                <Link href="/lender" className="text-sm font-medium text-accent-600 hover:text-accent-700">
-                  Open lender console →
-                </Link>
-                <Link href="/model" className="text-sm font-medium text-zinc-600 hover:text-ink">
-                  Read the model card →
-                </Link>
-              </div>
-            </article>
-          </div>
+        </div>
+        <div className="mt-12 grid gap-[18px] md:grid-cols-2">
+          <article className="card flex flex-col p-8 sm:p-10">
+            <p className="kicker">Borrowers</p>
+            <h3 className="mt-1 text-[28px] font-bold leading-tight tracking-[-0.03em] text-fg">Know before you apply.</h3>
+            <p className="mt-3 text-[15px] leading-relaxed text-muted">
+              See whether you qualify, how much you can comfortably repay, and exactly what would raise your score.
+            </p>
+            <ul className="mt-7 space-y-3 text-[15px] text-fg-2">
+              <li className="flex gap-3"><Tick />A clear decision with the reasons behind it</li>
+              <li className="flex gap-3"><Tick />An EMI sized to your real income</li>
+              <li className="flex gap-3"><Tick />Results in English, हिंदी and తెలుగు</li>
+            </ul>
+            <div className="mt-auto pt-9">
+              <ChevronLink href="/check" className="text-[17px]">
+                Check your eligibility
+              </ChevronLink>
+            </div>
+          </article>
+          <article className="card flex flex-col p-8 sm:p-10">
+            <p className="kicker">NBFCs and microfinance lenders</p>
+            <h3 className="mt-1 text-[28px] font-bold leading-tight tracking-[-0.03em] text-fg">Underwrite thin files with evidence.</h3>
+            <p className="mt-3 text-[15px] leading-relaxed text-muted">
+              Score applicants from verified cash flow, catch edited statements, and document every decision.
+            </p>
+            <ul className="mt-7 space-y-3 text-[15px] text-fg-2">
+              <li className="flex gap-3"><Tick />Portfolio view with statement checks per applicant</li>
+              <li className="flex gap-3"><Tick />Reason codes for every approve, review or decline</li>
+              <li className="flex gap-3"><Tick />Published model performance and fairness checks</li>
+            </ul>
+            <div className="mt-auto flex flex-wrap gap-x-7 gap-y-2 pt-9">
+              <ChevronLink href="/lender" className="text-[17px]">
+                Open lender console
+              </ChevronLink>
+              <ChevronLink href="/model" className="text-[17px]">
+                Read the model card
+              </ChevronLink>
+            </div>
+          </article>
         </div>
       </section>
 
-      <section>
-        <div className="container-page flex flex-col items-start justify-between gap-6 py-16 md:flex-row md:items-center md:py-20">
-          <div>
-            <h2 className="text-[24px] font-semibold tracking-[-0.02em]">See what your statement says about you.</h2>
-            <p className="mt-2 text-[15px] text-zinc-600">Use your own statement, or try a sample profile.</p>
-          </div>
-          <ButtonLink href="/check" size="lg">
-            Start a check
-          </ButtonLink>
-        </div>
+      <section className="container-page py-16 text-center md:py-24">
+        <h2 className="text-[34px] font-bold tracking-[-0.035em] text-fg sm:text-[40px]">See what your statement says about you.</h2>
+        <p className="mt-3 text-[17px] text-muted">Use your own statement, or try a sample profile.</p>
+        <ButtonLink href="/check" size="lg" className="mt-8">
+          Start a check
+        </ButtonLink>
       </section>
     </>
   );

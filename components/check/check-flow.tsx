@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { getSamples } from "@/lib/api";
 import { saveReport } from "@/lib/store";
 import type { LoanRequest, Report, Sample } from "@/lib/types";
+import { PageHeader } from "@/components/ui";
 import { Stepper } from "./stepper";
 import { ConnectStep, type Source } from "./connect-step";
 import { LoanStep } from "./loan-step";
@@ -52,18 +53,10 @@ export function CheckFlow() {
   }
 
   return (
-    <div className="container-page max-w-3xl! py-10 md:py-14">
-      <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-[28px] font-semibold tracking-[-0.025em]">Check your eligibility</h1>
-          <p className="mt-1 text-[15px] text-zinc-600">No credit history needed. Takes about a minute.</p>
-        </div>
-      </div>
-      <div className="mt-8 border-b border-line pb-5">
-        <Stepper current={step} />
-      </div>
+    <div className="container-page max-w-[880px]!">
+      <PageHeader kicker="Eligibility check" title="Check your eligibility" sub="No credit history needed. Takes about a minute." actions={<Stepper current={step} />} />
 
-      <div className="pt-8">
+      <div key={step} className="animate-rise">
         {step === 0 && (
           <ConnectStep
             samples={samples}

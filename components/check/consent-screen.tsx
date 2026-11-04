@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { Sample } from "@/lib/types";
 import { Button, ErrorState, Skeleton } from "@/components/ui";
+import { SelectedCheck } from "./connect-step";
 
 const fmt = new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric" });
 
@@ -38,18 +39,18 @@ export function ConsentScreen({
   }, []);
 
   if (samplesError) return <ErrorState title="Couldn’t reach the Account Aggregator" message={samplesError} />;
-  if (!samples) return <Skeleton className="h-[520px]" />;
+  if (!samples) return <Skeleton className="mx-auto h-[560px] max-w-[560px]" />;
   if (accounts.length === 0)
     return <ErrorState title="No linked accounts found" message="No accounts are available to share through the Account Aggregator right now. Upload a statement instead." />;
 
   if (rejected)
     return (
-      <div className="rounded-xl border border-line p-6 text-center">
-        <p className="text-sm font-medium">Consent declined</p>
-        <p className="mt-1 text-sm text-zinc-600">Nothing was shared. You can review the request again or choose another method.</p>
+      <div className="card mx-auto max-w-[560px] p-8 text-center">
+        <p className="text-[17px] font-semibold text-fg">Consent declined</p>
+        <p className="mt-1 text-sm text-muted">Nothing was shared. You can review the request again or choose another method.</p>
         <Button
-          variant="secondary"
-          className="mt-4"
+          variant="tinted"
+          className="mt-5"
           onClick={() => {
             setRejected(false);
             onRevoke();
@@ -61,84 +62,64 @@ export function ConsentScreen({
     );
 
   return (
-    <div className="mx-auto max-w-xl overflow-hidden rounded-xl border border-line shadow-[0_1px_2px_rgba(16,24,40,0.04)]">
-      <div className="flex items-center justify-between gap-3 border-b border-line bg-canvas px-5 py-3">
-        <div className="flex items-center gap-2.5">
-          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-ink text-[11px] font-semibold text-white">AA</span>
-          <div>
-            <p className="text-[13px] font-medium leading-tight">Account Aggregator</p>
-            <p className="text-xs leading-tight text-zinc-500">RBI-regulated consent manager</p>
-          </div>
-        </div>
-        <span className="hidden text-xs text-zinc-500 sm:inline">Consent request</span>
+    <div className="card mx-auto max-w-[560px] overflow-hidden shadow-sheet!">
+      <div className="px-5 pb-6 pt-7 text-center sm:px-8">
+        <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-[16px] bg-fg text-[15px] font-bold tracking-[-0.02em] text-panel">AA</span>
+        <p className="kicker mt-4">Account Aggregator · RBI-regulated consent manager</p>
+        <h3 className="mt-1 text-[22px] font-bold leading-tight tracking-[-0.025em] text-fg">
+          CreditBridge Lending Services wants to view your bank account
+        </h3>
+        <p className="mt-1.5 text-[13px] text-muted">Financial Information User (FIU)</p>
       </div>
 
-      <div className="px-5 py-5 sm:px-6">
-        <p className="text-[15px] leading-snug">
-          <span className="font-semibold">CreditBridge Lending Services</span> is requesting access to your bank account information.
-        </p>
-        <p className="mt-1 text-[13px] text-zinc-500">Financial Information User (FIU)</p>
+      <div className="space-y-6 px-4 pb-6 sm:px-6">
+        <section>
+          <h4 className="group-title px-1">Request details</h4>
+          <dl className="kv">
+            {[
+              ["Purpose", "Assess your loan application"],
+              ["Information", "Account profile, balances and transactions"],
+              ["Data range", `${from} – ${to}`],
+              ["Frequency", "One-time fetch"],
+              ["Consent expires", expiry],
+              ["Data use", "Deleted after your decision is made"],
+            ].map(([k, v]) => [<dt key={`${k}-k`}>{k}</dt>, <dd key={`${k}-v`} className="text-fg">{v}</dd>])}
+          </dl>
+        </section>
 
-        <dl className="mt-5 divide-y divide-line rounded-lg border border-line text-sm">
-          {[
-            ["Purpose", "Assess your loan application"],
-            ["Information", "Account profile, balances and transactions"],
-            ["Data range", `${from} – ${to}`],
-            ["Frequency", "One-time fetch"],
-            ["Consent expires", expiry],
-            ["Data use", "Deleted after your decision is made"],
-          ].map(([k, v]) => (
-            <div key={k} className="grid grid-cols-[120px_1fr] gap-3 px-4 py-2.5 sm:grid-cols-[140px_1fr]">
-              <dt className="text-zinc-500">{k}</dt>
-              <dd className="text-ink">{v}</dd>
-            </div>
-          ))}
-        </dl>
-
-        <fieldset className="mt-5">
-          <legend className="text-[13px] font-medium text-zinc-700">Select account to share</legend>
-          <div className="mt-2 space-y-2">
+        <fieldset>
+          <legend className="group-title px-1">Account to share</legend>
+          <div className="group-list">
             {accounts.map((a) => {
               const isSel = chosen?.id === a.id;
               return (
-                <label
-                  key={a.id}
-                  className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3.5 py-3 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent-600 ${
-                    isSel ? "border-accent-600 bg-accent-50/40" : "border-line hover:border-line-strong"
-                  }`}
-                >
+                <label key={a.id} className="flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors hover:bg-fill-2 has-[:focus-visible]:bg-accent-soft">
                   <input type="radio" name="aa-account" className="sr-only" checked={isSel} onChange={() => setSelected(a.id)} />
-                  <span
-                    className={`flex h-4 w-4 flex-none items-center justify-center rounded-full border ${isSel ? "border-accent-600 bg-accent-600" : "border-line-strong"}`}
-                    aria-hidden="true"
-                  >
-                    {isSel && <span className="h-1.5 w-1.5 rounded-full bg-white" />}
-                  </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-medium">
-                      Savings account <span className="tnum text-zinc-500">•••• {maskedNumber(a.id)}</span>
+                    <span className="block text-[15px] font-medium text-fg">
+                      Savings account <span className="text-muted tnum">•••• {maskedNumber(a.id)}</span>
                     </span>
-                    <span className="block truncate text-[13px] text-zinc-500">{a.name}</span>
+                    <span className="block truncate text-[13px] text-muted">{a.name}</span>
                   </span>
+                  <SelectedCheck on={isSel} />
                 </label>
               );
             })}
           </div>
         </fieldset>
 
-        <p className="mt-5 text-xs leading-relaxed text-zinc-500">
-          Demo environment: there is no live Account Aggregator connection, so approving shares a sample account in the
-          standard AA data format.
+        <p className="note">
+          Demo environment: there is no live Account Aggregator connection, so approving shares a sample account in the standard AA data format.
         </p>
-      </div>
 
-      <div className="flex flex-col-reverse gap-2 border-t border-line bg-canvas px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
-        <Button variant="secondary" size="lg" onClick={() => setRejected(true)}>
-          Reject
-        </Button>
-        <Button size="lg" disabled={!chosen} onClick={() => chosen && onApprove(chosen)}>
-          Approve and share
-        </Button>
+        <div className="flex flex-col gap-2.5 pt-1">
+          <Button size="lg" className="w-full rounded-xl!" disabled={!chosen} onClick={() => chosen && onApprove(chosen)}>
+            Approve and share
+          </Button>
+          <Button variant="tinted" size="lg" className="w-full rounded-xl!" onClick={() => setRejected(true)}>
+            Reject
+          </Button>
+        </div>
       </div>
     </div>
   );

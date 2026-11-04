@@ -13,8 +13,8 @@ export const Background: React.FC = () => {
     <AbsoluteFill style={{backgroundColor: theme.bg}}>
       <AbsoluteFill
         style={{
-          background: `radial-gradient(900px 600px at ${x1}% 20%, rgba(45,212,191,0.13), transparent 60%),
-            radial-gradient(1000px 700px at ${x2}% 85%, rgba(129,140,248,0.14), transparent 60%)`,
+          background: `radial-gradient(900px 600px at ${x1}% 20%, rgba(51,80,214,0.22), transparent 60%),
+            radial-gradient(1000px 700px at ${x2}% 85%, rgba(45,212,191,0.10), transparent 60%)`,
         }}
       />
       <AbsoluteFill

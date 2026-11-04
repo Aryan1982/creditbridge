@@ -136,12 +136,13 @@ export function bandTone(b: Band): Tone {
   return b === "A" || b === "B" ? "positive" : b === "C" ? "caution" : "negative";
 }
 
-export const TONE_HEX: Record<Tone, string> = {
-  positive: "#15803d",
-  caution: "#b45309",
-  negative: "#b91c1c",
-  neutral: "#71717a",
-  accent: "#3350d6",
+/** CSS colour for each tone; resolves per light/dark appearance. */
+export const TONE_COLOR: Record<Tone, string> = {
+  positive: "var(--green)",
+  caution: "var(--yellow)",
+  negative: "var(--red)",
+  neutral: "var(--faint)",
+  accent: "var(--accent)",
 };
 
 export const FLAG_LABEL: Record<string, string> = {

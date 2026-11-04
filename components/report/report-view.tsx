@@ -8,7 +8,7 @@ import { fmtDate, personaLabel } from "@/lib/format";
 import { LANGS, T } from "@/lib/i18n";
 import { loadReport, saveReport, type StoredReport } from "@/lib/store";
 import type { Lang, LoanRequest } from "@/lib/types";
-import { Button, ButtonLink, ErrorState, Skeleton } from "@/components/ui";
+import { Button, ButtonLink, ErrorState, PageHeader, Segmented, Skeleton } from "@/components/ui";
 import { DecisionHero } from "./decision-hero";
 import { Reasons } from "./reasons";
 import { Improvements } from "./improvements";
@@ -71,8 +71,8 @@ export function ReportView() {
   if (state.status === "empty")
     return (
       <div className="container-page max-w-xl! py-24 text-center">
-        <h1 className="text-2xl font-semibold tracking-[-0.02em]">No report yet</h1>
-        <p className="mt-2 text-[15px] text-zinc-600">Run an eligibility check to see your decision, the reasons behind it and how to improve.</p>
+        <h1 className="large-title">No report yet</h1>
+        <p className="mt-3 text-[17px] text-muted">Run an eligibility check to see your decision, the reasons behind it and how to improve.</p>
         <ButtonLink href="/check" size="lg" className="mt-8">
           Check eligibility
         </ButtonLink>
@@ -88,7 +88,7 @@ export function ReportView() {
           action={
             <div className="flex gap-3">
               <Button onClick={() => setAttempt((a) => a + 1)}>Try again</Button>
-              <ButtonLink href={fromLender ? "/lender" : "/check"} variant="secondary">
+              <ButtonLink href={fromLender ? "/lender" : "/check"} variant="tinted">
                 {fromLender ? "Back to portfolio" : "Start a new check"}
               </ButtonLink>
             </div>
@@ -103,42 +103,48 @@ export function ReportView() {
 
   return (
     <>
-      <div className="print:hidden">
-        <div className="border-b border-line bg-canvas">
-          <div className="container-page py-6 md:py-8">
-            {fromLender && (
-              <Link href="/lender" className="mb-4 inline-flex items-center gap-1 text-[13px] text-zinc-500 hover:text-ink">
-                <span aria-hidden="true">←</span> Portfolio
+      <div className="container-page print:hidden">
+        <PageHeader
+          kicker={
+            fromLender ? (
+              <Link href="/lender" className="inline-flex items-center gap-0.5 text-accent hover:underline">
+                <svg viewBox="0 0 12 12" className="h-3 w-3" aria-hidden="true">
+                  <path d="M7.5 2.5 4 6l3.5 3.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                Portfolio
               </Link>
-            )}
-            <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-              <div className="min-w-0">
-                <h1 className="text-[26px] font-semibold tracking-[-0.025em] sm:text-[28px]">{a.name}</h1>
-                <p className="mt-1 text-sm text-zinc-600">
-                  {[personaLabel(a.persona), a.bank, `${fmtDate(a.start_date)} – ${fmtDate(a.end_date)}`, `${a.transaction_count.toLocaleString("en-IN")} transactions`]
-                    .filter((x) => x && x !== "—")
-                    .join(" · ")}
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <LangToggle lang={lang} onChange={setLang} />
-                <Button variant="secondary" onClick={() => window.print()}>
-                  <svg viewBox="0 0 16 16" className="h-4 w-4" aria-hidden="true">
-                    <path d="M8 2.5v7.5m0 0L5 7m3 3l3-3M3 12.5h10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  <span lang={lang}>{t.download}</span>
-                </Button>
-                <ButtonLink href="/check" variant="ghost">
-                  <span lang={lang}>{t.newCheck}</span>
-                </ButtonLink>
-              </div>
-            </div>
-          </div>
-        </div>
+            ) : (
+              personaLabel(a.persona)
+            )
+          }
+          title={a.name}
+          sub={[fromLender ? personaLabel(a.persona) : null, a.bank, `${fmtDate(a.start_date)} – ${fmtDate(a.end_date)}`, `${a.transaction_count.toLocaleString("en-IN")} transactions`]
+            .filter((x) => x && x !== "—")
+            .join(" · ")}
+          actions={
+            <>
+              <Segmented
+                label="Language"
+                value={lang}
+                onChange={setLang}
+                options={LANGS.map((l) => ({ value: l.code, label: l.label, ariaLabel: l.name, lang: l.code }))}
+              />
+              <Button variant="secondary" onClick={() => window.print()}>
+                <svg viewBox="0 0 24 24" className="h-[17px] w-[17px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19h14" />
+                </svg>
+                <span lang={lang}>{t.download}</span>
+              </Button>
+              <ButtonLink href="/check" variant="secondary">
+                <span lang={lang}>{t.newCheck}</span>
+              </ButtonLink>
+            </>
+          }
+        />
 
-        <div className="container-page space-y-12 py-8 md:py-10">
+        <div className="space-y-12">
           <DecisionHero report={report} loan={loan} lang={lang} />
-          <div className="grid gap-10 lg:grid-cols-2 lg:gap-8">
+          <div className="grid gap-12 lg:grid-cols-2 lg:gap-[18px]">
             <Reasons reasons={report.risk.reasons} lang={lang} />
             <Improvements improvements={report.improvements} current={report.risk.score} lang={lang} />
           </div>
@@ -150,53 +156,19 @@ export function ReportView() {
   );
 }
 
-function LangToggle({ lang, onChange }: { lang: Lang; onChange: (l: Lang) => void }) {
-  return (
-    <div role="radiogroup" aria-label="Language" className="inline-flex rounded-md border border-line-strong bg-white p-0.5">
-      {LANGS.map((l, i) => {
-        const sel = l.code === lang;
-        return (
-          <button
-            key={l.code}
-            type="button"
-            role="radio"
-            aria-checked={sel}
-            aria-label={l.name}
-            tabIndex={sel ? 0 : -1}
-            lang={l.code}
-            onClick={() => onChange(l.code)}
-            onKeyDown={(e) => {
-              const d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
-              if (!d) return;
-              e.preventDefault();
-              const next = LANGS[(i + d + LANGS.length) % LANGS.length];
-              onChange(next.code);
-              (e.currentTarget.parentElement?.children[(i + d + LANGS.length) % LANGS.length] as HTMLElement | undefined)?.focus();
-            }}
-            className={`h-8 rounded-[5px] px-3 text-[13px] transition-colors ${sel ? "bg-ink font-medium text-white" : "text-zinc-600 hover:text-ink"}`}
-          >
-            {l.label}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
 function ReportSkeleton() {
   return (
-    <div aria-busy="true" aria-label="Loading report">
-      <div className="border-b border-line bg-canvas">
-        <div className="container-page py-8">
-          <Skeleton className="h-7 w-48" />
-          <Skeleton className="mt-3 h-4 w-80 max-w-full" />
-        </div>
+    <div className="container-page" aria-busy="true" aria-label="Loading report">
+      <div className="pb-7 pt-12">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="mt-3 h-9 w-64" />
+        <Skeleton className="mt-3 h-4 w-96 max-w-full" />
       </div>
-      <div className="container-page space-y-8 py-10">
-        <Skeleton className="h-[280px]" />
-        <div className="grid gap-8 lg:grid-cols-2">
-          <Skeleton className="h-[260px]" />
-          <Skeleton className="h-[260px]" />
+      <div className="space-y-6">
+        <Skeleton className="h-[300px]" />
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Skeleton className="h-[280px]" />
+          <Skeleton className="h-[280px]" />
         </div>
       </div>
     </div>

@@ -28,7 +28,7 @@ export const FORMAT_LABEL: Record<Sample["format"], string> = {
 const MAX_BYTES = 10 * 1024 * 1024;
 
 function MethodIcon({ id }: { id: Method }) {
-  const common = { fill: "none", stroke: "currentColor", strokeWidth: 1.5, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  const common = { fill: "none", stroke: "currentColor", strokeWidth: 1.7, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
   return (
     <svg viewBox="0 0 20 20" className="h-5 w-5" aria-hidden="true">
       {id === "upload" && (
@@ -52,6 +52,25 @@ function MethodIcon({ id }: { id: Method }) {
     </svg>
   );
 }
+
+/** Blue check badge shown on a selected tile. */
+export function SelectedCheck({ on }: { on: boolean }) {
+  return (
+    <span
+      className={`flex h-[22px] w-[22px] flex-none items-center justify-center rounded-full transition-colors ${on ? "bg-accent" : "bg-transparent ring-[1.5px] ring-inset ring-[var(--faint)]/50"}`}
+      aria-hidden="true"
+    >
+      {on && (
+        <svg viewBox="0 0 12 12" className="h-3 w-3 text-white">
+          <path d="M2.5 6.2l2.2 2.2 4.8-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      )}
+    </span>
+  );
+}
+
+const TILE = "card relative text-left transition-[box-shadow,transform] duration-300 ease-apple hover:-translate-y-0.5";
+const TILE_ON = "ring-2 ring-accent";
 
 function prettyBytes(n: number) {
   if (n < 1024) return `${n} B`;
@@ -88,12 +107,12 @@ export function ConnectStep({
 
   return (
     <section aria-labelledby="connect-title">
-      <h2 id="connect-title" className="text-lg font-semibold tracking-[-0.01em]">
+      <h2 id="connect-title" className="section-title px-1">
         How would you like to share your transactions?
       </h2>
-      <p className="mt-1 text-sm text-zinc-600">We need 6–12 months of history from the account where you receive income.</p>
+      <p className="mt-1 px-1 text-[13px] text-muted">We need 6–12 months of history from the account where you receive income.</p>
 
-      <div role="radiogroup" aria-label="Connection method" className="mt-6 grid gap-3 sm:grid-cols-3">
+      <div role="radiogroup" aria-label="Connection method" className="mt-5 grid gap-3 sm:grid-cols-3 sm:gap-[18px]">
         {METHODS.map((m, i) => {
           const selected = m.id === method;
           return (
@@ -106,16 +125,17 @@ export function ConnectStep({
               tabIndex={selected ? 0 : -1}
               onKeyDown={(e) => onKey(e, i)}
               onClick={() => setMethod(m.id)}
-              className={`flex items-start gap-3 rounded-lg border p-4 text-left transition-colors sm:flex-col sm:gap-4 ${
-                selected ? "border-accent-600 bg-accent-50/50 ring-1 ring-accent-600" : "border-line hover:border-line-strong"
-              }`}
+              className={`${TILE} flex items-center gap-4 p-4 sm:flex-col sm:items-start sm:p-5 ${selected ? TILE_ON : ""}`}
             >
-              <span className={`flex h-9 w-9 flex-none items-center justify-center rounded-md border ${selected ? "border-accent-200 bg-white text-accent-600" : "border-line text-zinc-600"}`}>
+              <span className={`flex h-10 w-10 flex-none items-center justify-center rounded-full ${selected ? "bg-accent text-white" : "bg-fill-2 text-fg-2"}`}>
                 <MethodIcon id={m.id} />
               </span>
-              <span>
-                <span className="block text-sm font-medium text-ink">{m.title}</span>
-                <span className="mt-0.5 block text-[13px] text-zinc-500">{m.body}</span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[15px] font-semibold tracking-[-0.01em] text-fg">{m.title}</span>
+                <span className="mt-0.5 block text-[13px] text-muted">{m.body}</span>
+              </span>
+              <span className="sm:absolute sm:right-4 sm:top-4">
+                <SelectedCheck on={selected} />
               </span>
             </button>
           );
@@ -140,8 +160,19 @@ export function ConnectStep({
       </div>
 
       {method !== "aa" && (
-        <div className="sticky bottom-0 z-10 mt-8 flex items-center justify-end gap-3 border-t border-line bg-white/95 py-4 backdrop-blur-sm">
-          <Button size="lg" disabled={!ready} onClick={onContinue}>
+        <div className="sticky bottom-3 z-10 mt-8 flex items-center justify-between gap-3 rounded-[18px] bg-[var(--nav)] px-4 py-3 shadow-card backdrop-blur-[20px] backdrop-saturate-[1.8]">
+          <p className="truncate text-[13px] text-muted">
+            {ready ? (
+              <>
+                Selected: <span className="font-medium text-fg">{source?.kind === "upload" ? source.file.name : source?.label}</span>
+              </>
+            ) : method === "upload" ? (
+              "Choose a statement to continue"
+            ) : (
+              "Pick a profile to continue"
+            )}
+          </p>
+          <Button disabled={!ready} onClick={onContinue}>
             Continue
           </Button>
         </div>
@@ -158,8 +189,7 @@ function UploadPanel({ source, onSource, example }: { source: Source | null; onS
 
   function accept(f: File | undefined) {
     if (!f) return;
-    const ok = /\.(pdf|csv|json)$/i.test(f.name);
-    if (!ok) {
+    if (!/\.(pdf|csv|json)$/i.test(f.name)) {
       setError("Please choose a PDF or CSV bank statement.");
       return;
     }
@@ -172,7 +202,7 @@ function UploadPanel({ source, onSource, example }: { source: Source | null; onS
   }
 
   return (
-    <div>
+    <div className="card p-3 sm:p-4">
       <div
         onDragOver={(e) => {
           e.preventDefault();
@@ -184,15 +214,17 @@ function UploadPanel({ source, onSource, example }: { source: Source | null; onS
           setDragging(false);
           accept(e.dataTransfer.files?.[0]);
         }}
-        className={`flex flex-col items-center justify-center rounded-xl border border-dashed px-6 py-12 text-center transition-colors ${
-          dragging ? "border-accent-600 bg-accent-50" : "border-line-strong bg-canvas"
+        className={`flex flex-col items-center justify-center rounded-[14px] border-2 border-dashed px-6 py-14 text-center transition-colors ${
+          dragging ? "border-accent bg-accent-soft" : "border-transparent bg-fill-2"
         }`}
       >
-        <svg viewBox="0 0 24 24" className="h-7 w-7 text-zinc-400" aria-hidden="true">
-          <path d="M12 15V4m0 0L8 8m4-4l4 4M5 14v4.5A1.5 1.5 0 006.5 20h11a1.5 1.5 0 001.5-1.5V14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-        <p className="mt-4 text-sm font-medium text-ink">Drag your statement here</p>
-        <p className="mt-1 text-[13px] text-zinc-500">PDF or CSV, up to 10 MB</p>
+        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-panel text-accent shadow-card">
+          <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true">
+            <path d="M12 15V4m0 0L8 8m4-4l4 4M5 14v4.5A1.5 1.5 0 006.5 20h11a1.5 1.5 0 001.5-1.5V14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+        <p className="mt-4 text-[17px] font-semibold tracking-[-0.01em] text-fg">Drop your statement here</p>
+        <p className="mt-1 text-[13px] text-muted">PDF or CSV, up to 10 MB</p>
         <Button variant="secondary" className="mt-5" onClick={() => inputRef.current?.click()}>
           Choose file
         </Button>
@@ -210,33 +242,35 @@ function UploadPanel({ source, onSource, example }: { source: Source | null; onS
         />
       </div>
       {error && (
-        <p role="alert" className="mt-3 text-sm text-negative">
+        <p role="alert" className="mt-3 px-2 text-sm text-negative">
           {error}
         </p>
       )}
       {file && (
-        <div className="mt-4 flex items-center justify-between gap-4 rounded-lg border border-line px-4 py-3">
-          <div className="flex min-w-0 items-center gap-3">
-            <span className="flex h-8 w-8 flex-none items-center justify-center rounded-md bg-accent-50 text-[11px] font-semibold uppercase text-accent-700">
-              {file.name.split(".").pop()}
-            </span>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-medium">{file.name}</p>
-              <p className="text-[13px] text-zinc-500 tnum">{prettyBytes(file.size)}</p>
+        <div className="group-list mt-3">
+          <div className="flex items-center justify-between gap-4 px-4 py-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="flex h-9 w-9 flex-none items-center justify-center rounded-[10px] bg-accent text-[10px] font-bold uppercase text-white">
+                {file.name.split(".").pop()}
+              </span>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-fg">{file.name}</p>
+                <p className="text-[12.5px] text-muted tnum">{prettyBytes(file.size)}</p>
+              </div>
             </div>
+            <Button variant="ghost" size="sm" onClick={() => onSource(null)}>
+              Remove
+            </Button>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => onSource(null)}>
-            Remove
-          </Button>
         </div>
       )}
-      <p className="mt-4 text-[13px] leading-relaxed text-zinc-500">
+      <p className="px-2 pb-1 pt-3 text-[12.5px] leading-relaxed text-faint">
         Your file is read in memory to produce this result and is not stored. Password-protected PDFs need to be unlocked first.
         {example && (
           <>
             {" "}
             No statement to hand?{" "}
-            <a href={`/api/samples/${encodeURIComponent(example.id)}/file`} download className="font-medium text-accent-600 underline-offset-2 hover:underline">
+            <a href={`/api/samples/${encodeURIComponent(example.id)}/file`} download className="font-medium text-accent hover:underline">
               Download an example PDF
             </a>{" "}
             and upload it here.
@@ -263,7 +297,7 @@ function SamplePanel({
     return (
       <div className="grid gap-3 sm:grid-cols-2">
         {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-32" />
+          <Skeleton key={i} className="h-36" />
         ))}
       </div>
     );
@@ -276,12 +310,12 @@ function SamplePanel({
   ].filter((g) => g.items.length > 0);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-9">
       {groups.map((g) => (
         <fieldset key={g.title}>
-          <legend className="text-sm font-medium text-ink">{g.title}</legend>
-          <p className="mt-0.5 text-[13px] text-zinc-500">{g.sub}</p>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <legend className="px-1 text-[17px] font-semibold tracking-[-0.015em] text-fg">{g.title}</legend>
+          <p className="mt-0.5 px-1 text-[13px] text-muted">{g.sub}</p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 sm:gap-[18px]">
             {g.items.map((s) => (
               <SampleCard key={s.id} sample={s} selected={s.id === selectedId} onSelect={() => onSource({ kind: "sample", sampleId: s.id, label: s.name })} />
             ))}
@@ -294,27 +328,18 @@ function SamplePanel({
 
 function SampleCard({ sample: s, selected, onSelect }: { sample: Sample; selected: boolean; onSelect: () => void }) {
   return (
-    <label
-      className={`relative flex cursor-pointer flex-col rounded-lg border p-4 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent-600 ${
-        selected ? "border-accent-600 bg-accent-50/50 ring-1 ring-accent-600" : "border-line hover:border-line-strong"
-      }`}
-    >
+    <label className={`${TILE} flex cursor-pointer flex-col p-5 has-[:focus-visible]:outline-[3px] has-[:focus-visible]:outline-accent/45 ${selected ? TILE_ON : ""}`}>
       <input type="radio" name="sample" value={s.id} checked={selected} onChange={onSelect} className="sr-only" />
       <span className="flex items-start justify-between gap-3">
-        <span>
-          <span className="block text-sm font-medium text-ink">{s.name}</span>
-          <span className="block text-[13px] text-zinc-500">{personaLabel(s.persona)}</span>
+        <span className="min-w-0">
+          <span className="row-name">{s.name}</span>
+          <span className="row-sub block">{personaLabel(s.persona)}</span>
         </span>
-        <span
-          className={`mt-0.5 flex h-4 w-4 flex-none items-center justify-center rounded-full border ${selected ? "border-accent-600 bg-accent-600" : "border-line-strong bg-white"}`}
-          aria-hidden="true"
-        >
-          {selected && <span className="h-1.5 w-1.5 rounded-full bg-white" />}
-        </span>
+        <SelectedCheck on={selected} />
       </span>
-      <span className="mt-3 block text-[13px] leading-relaxed text-zinc-600">{s.description}</span>
+      <span className="mt-3 block flex-1 text-[13px] leading-relaxed text-fg-2">{s.description}</span>
       <span className="mt-4 flex flex-wrap gap-2">
-        <Badge>{FORMAT_LABEL[s.format] ?? s.format}</Badge>
+        <Badge tone="accent">{FORMAT_LABEL[s.format] ?? s.format}</Badge>
         {s.tampered && <Badge tone="caution">Edited statement</Badge>}
       </span>
     </label>

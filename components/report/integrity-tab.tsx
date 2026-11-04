@@ -1,6 +1,12 @@
-import { fmtDate, inr, STATUS_LABEL, statusTone } from "@/lib/format";
+import { fmtDate, inr, statusTone } from "@/lib/format";
 import type { Integrity } from "@/lib/types";
 import { Badge, StatusIcon } from "@/components/ui";
+
+const TITLE: Record<Integrity["status"], string> = {
+  pass: "Statement verified",
+  warn: "Needs a closer look",
+  fail: "Authenticity checks failed",
+};
 
 const SUMMARY: Record<Integrity["status"], string> = {
   pass: "This statement passed every authenticity check. Balances reconcile and nothing suggests it was edited.",
@@ -14,51 +20,53 @@ export function IntegrityTab({ integrity }: { integrity: Integrity }) {
   const passed = integrity.checks.filter((c) => c.status === "pass").length;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-5 rounded-xl border border-line p-5 sm:flex-row sm:items-center sm:p-6">
+    <div className="space-y-[18px]">
+      <div className="card flex flex-col gap-5 p-6 sm:flex-row sm:items-center">
         <div className="flex items-center gap-4">
-          <StatusIcon status={integrity.status} className="h-10! w-10!" />
+          <StatusIcon status={integrity.status} className="h-12! w-12!" />
           <div>
-            <p className="text-[15px] font-semibold">{STATUS_LABEL[integrity.status]}</p>
-            <p className="text-[13px] text-zinc-500 tnum">
+            <p className="text-[21px] font-bold tracking-[-0.02em] text-fg">{TITLE[integrity.status]}</p>
+            <p className="text-[13px] text-muted tnum">
               {passed} of {integrity.checks.length} checks passed · score {integrity.score}/100
             </p>
           </div>
         </div>
-        <p className="text-sm leading-relaxed text-zinc-600 sm:ml-auto sm:max-w-[56ch]">{SUMMARY[integrity.status]}</p>
+        <p className="text-sm leading-relaxed text-muted sm:ml-auto sm:max-w-[52ch]">{SUMMARY[integrity.status]}</p>
       </div>
 
-      <ul className="divide-y divide-line rounded-xl border border-line">
+      <ul className="card divide-y divide-sep overflow-hidden">
         {checks.map((c) => (
           <li key={c.id} className="px-5 py-4 sm:px-6">
             <div className="flex items-start gap-3">
-              <StatusIcon status={c.status} className="mt-0.5 flex-none" />
+              <StatusIcon status={c.status} className="mt-0.5 h-[18px]! w-[18px]!" />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-sm font-medium">{c.label}</p>
+                  <p className="text-[15px] font-semibold tracking-[-0.01em] text-fg">{c.label}</p>
                   <Badge tone={statusTone(c.status)}>{c.status === "pass" ? "Passed" : c.status === "warn" ? "Warning" : "Failed"}</Badge>
                 </div>
-                <p className="mt-1 text-[13px] leading-relaxed text-zinc-600">{c.detail}</p>
+                <p className="mt-0.5 text-[13px] leading-relaxed text-muted">{c.detail}</p>
                 {c.evidence.length > 0 && (
-                  <div className="mt-3 overflow-x-auto rounded-lg border border-line">
-                    <table className="w-full min-w-[520px] text-[13px]">
+                  <div className={`mt-3 overflow-x-auto rounded-[14px] ${c.status === "fail" ? "bg-negative/8" : c.status === "warn" ? "bg-caution/8" : "bg-fill-2"}`}>
+                    <table className="mini min-w-[520px]">
                       <caption className="sr-only">Evidence for {c.label}</caption>
                       <thead>
-                        <tr className="border-b border-line bg-canvas text-left text-[12px] text-zinc-500">
-                          <th scope="col" className="px-3 py-2 font-medium">Date</th>
-                          <th scope="col" className="px-3 py-2 font-medium">Transaction</th>
-                          <th scope="col" className="px-3 py-2 text-right font-medium">Amount</th>
+                        <tr>
+                          <th scope="col">Date</th>
+                          <th scope="col" className="text-left!">
+                            Transaction
+                          </th>
+                          <th scope="col">Amount</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-line">
+                      <tbody>
                         {c.evidence.map((e, i) => (
-                          <tr key={i} className={c.status === "fail" ? "bg-negative-bg/70" : c.status === "warn" ? "bg-caution-bg" : ""}>
-                            <td className="whitespace-nowrap px-3 py-2 text-zinc-600 tnum">{fmtDate(e.date)}</td>
-                            <td className="px-3 py-2">
-                              <p className="font-mono text-[12px] text-zinc-800">{e.narration}</p>
-                              {e.note && <p className="mt-0.5 text-[12px] text-zinc-600">{e.note}</p>}
+                          <tr key={i}>
+                            <td className="whitespace-nowrap text-muted">{fmtDate(e.date)}</td>
+                            <td className="text-left!">
+                              <p className="font-mono text-[12px] text-fg">{e.narration}</p>
+                              {e.note && <p className="mt-0.5 text-[12px] text-muted">{e.note}</p>}
                             </td>
-                            <td className={`whitespace-nowrap px-3 py-2 text-right font-medium tnum ${e.amount > 0 ? "text-positive" : ""}`}>
+                            <td className={`whitespace-nowrap font-semibold ${e.amount > 0 ? "text-positive" : "text-fg"}`}>
                               {e.amount === 0 ? "—" : `${e.amount > 0 ? "+" : "−"}${inr(Math.abs(e.amount))}`}
                             </td>
                           </tr>

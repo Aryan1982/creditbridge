@@ -18,7 +18,7 @@ export function ReportTabs({ report, lang }: { report: Report; lang: Lang }) {
   const t = T[lang].tabs;
   const flagged = report.transactions.filter((x) => x.flags.length > 0).length;
   return (
-    <section aria-label="Details">
+    <section aria-label="Details" className="space-y-1">
       <Tabs
         label="Report details"
         value={tab}
@@ -32,14 +32,14 @@ export function ReportTabs({ report, lang }: { report: Report; lang: Lang }) {
             id: "authenticity",
             label: (
               <span className="flex items-center gap-1.5" lang={lang}>
+                <StatusIcon status={report.integrity.status} className="h-3.5! w-3.5!" />
                 {t.authenticity}
-                <StatusIcon status={report.integrity.status} className="h-3.5 w-3.5" />
               </span>
             ),
           },
         ]}
       />
-      <TabPanel id={tab}>
+      <TabPanel key={tab} id={tab}>
         {tab === "cashflow" && <CashflowTab report={report} />}
         {tab === "income" && <IncomeTab report={report} />}
         {tab === "spending" && <SpendingTab report={report} />}

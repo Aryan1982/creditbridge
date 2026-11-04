@@ -8,6 +8,7 @@ export interface TabDef {
   count?: number;
 }
 
+/** Tabs rendered as an Apple segmented control (scrolls horizontally on narrow screens). */
 export function Tabs({ tabs, value, onChange, label }: { tabs: TabDef[]; value: string; onChange: (id: string) => void; label: string }) {
   const base = useId();
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -20,8 +21,8 @@ export function Tabs({ tabs, value, onChange, label }: { tabs: TabDef[]; value: 
   }
 
   return (
-    <div className="-mx-5 overflow-x-auto px-5 md:mx-0 md:px-0">
-      <div role="tablist" aria-label={label} className="flex min-w-max gap-6 border-b border-line">
+    <div className="-mx-[14px] overflow-x-auto px-[14px] py-1 md:mx-0 md:px-0">
+      <div role="tablist" aria-label={label} className="seg min-w-max">
         {tabs.map((t, i) => {
           const sel = t.id === value;
           return (
@@ -36,6 +37,7 @@ export function Tabs({ tabs, value, onChange, label }: { tabs: TabDef[]; value: 
               aria-selected={sel}
               aria-controls={`panel-${t.id}`}
               tabIndex={sel ? 0 : -1}
+              data-on={sel}
               onClick={(e) => {
                 onChange(t.id);
                 e.currentTarget.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
@@ -48,14 +50,10 @@ export function Tabs({ tabs, value, onChange, label }: { tabs: TabDef[]; value: 
                 else return;
                 e.preventDefault();
               }}
-              className={`relative -mb-px flex items-center gap-2 border-b-2 pb-3 pt-1 text-sm transition-colors ${
-                sel ? "border-ink font-medium text-ink" : "border-transparent text-zinc-500 hover:text-ink"
-              }`}
+              className="seg-item inline-flex items-center"
             >
               {t.label}
-              {t.count != null && (
-                <span className={`rounded-full px-1.5 py-px text-[11px] tnum ${sel ? "bg-zinc-900 text-white" : "bg-zinc-100 text-zinc-600"}`}>{t.count}</span>
-              )}
+              {t.count != null && <span className="count">{t.count}</span>}
             </button>
           );
         })}
@@ -66,7 +64,7 @@ export function Tabs({ tabs, value, onChange, label }: { tabs: TabDef[]; value: 
 
 export function TabPanel({ id, children }: { id: string; children: ReactNode }) {
   return (
-    <div role="tabpanel" id={`panel-${id}`} tabIndex={0} className="pt-6 focus-visible:outline-offset-4">
+    <div role="tabpanel" id={`panel-${id}`} tabIndex={-1} className="animate-rise pt-5 outline-none">
       {children}
     </div>
   );

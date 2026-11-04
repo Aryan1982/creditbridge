@@ -1,40 +1,36 @@
 import {interpolate, useCurrentFrame} from 'remotion';
-import {Appear, BridgeMark, Pill, Scene} from '../components/ui';
+import {Appear, LogoMark, Pill, Scene} from '../components/ui';
 import {theme} from '../theme';
 
 export const Solution: React.FC<{duration: number}> = ({duration}) => {
   const frame = useCurrentFrame();
-  const glow = interpolate(frame, [0, 60, 120], [0, 1, 0.6], {extrapolateRight: 'clamp'});
+  const glow = interpolate(frame, [0, 40, 90], [0, 1, 0.6], {extrapolateRight: 'clamp'});
   return (
     <Scene duration={duration} style={{justifyContent: 'center', alignItems: 'center', textAlign: 'center'}}>
-      <BridgeMark size={360} delay={5} />
-      <Appear delay={25}>
+      <LogoMark size={150} delay={2} />
+      <Appear delay={14}>
         <div
           style={{
             fontSize: 150,
             fontWeight: 900,
             letterSpacing: -5,
-            marginTop: 10,
-            textShadow: `0 0 ${60 * glow}px rgba(45,212,191,0.35)`,
+            marginTop: 30,
+            textShadow: `0 0 ${60 * glow}px rgba(123,143,250,0.4)`,
           }}
         >
           Credit<span style={{color: theme.accent}}>Bridge</span>
         </div>
       </Appear>
-      <Appear delay={50}>
-        <div style={{fontSize: 52, color: theme.muted, marginTop: 10}}>
-          Explainable <span style={{color: theme.text}}>alternative-data</span> credit scoring
+      <Appear delay={28}>
+        <div style={{fontSize: 52, color: theme.muted, marginTop: 6}}>
+          <span style={{color: theme.text}}>Cash-flow underwriting</span> for people with no credit score
         </div>
       </Appear>
-      <Appear delay={75}>
-        <div style={{fontSize: 34, color: theme.muted, marginTop: 24, maxWidth: 1300, lineHeight: 1.4}}>
-          Scores applicants on who they are today — job stability, savings, housing, purpose — not just on a credit history they never had.
-        </div>
-      </Appear>
-      <Appear delay={110}>
-        <div style={{display: 'flex', gap: 24, marginTop: 56, justifyContent: 'center'}}>
-          <Pill>Track HI-04 · Alternative Credit Scoring</Pill>
-          <Pill color={theme.accent2}>Neural Storm 2026</Pill>
+      <Appear delay={46}>
+        <div style={{display: 'flex', gap: 22, marginTop: 56, justifyContent: 'center'}}>
+          <Pill>Bank statement · PDF or CSV</Pill>
+          <Pill color={theme.accent2}>RBI Account Aggregator</Pill>
+          <Pill color={theme.good}>Explained decision in seconds</Pill>
         </div>
       </Appear>
     </Scene>

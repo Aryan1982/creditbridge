@@ -90,49 +90,46 @@ export function AnalysisStep({
     }
   }, [active, result]);
 
-  const labels = stageLabels(result?.applicant.transaction_count ?? null);
+const labels = stageLabels(result?.applicant.transaction_count ?? null);
   const complete = active >= STAGE_COUNT && !!result;
+  const progress = Math.min(active, STAGE_COUNT) / STAGE_COUNT;
 
   return (
-    <section aria-labelledby="analysis-title" className="mx-auto max-w-md py-4">
-      <h2 id="analysis-title" className="text-lg font-semibold tracking-[-0.01em]">
-        {error ? "We couldn’t finish the analysis" : complete ? "Your report is ready" : "Analysing your statement"}
-      </h2>
-      <p className="mt-1 text-sm text-zinc-600">
-        {error ? "Nothing was saved. You can try again or use a different statement." : "This usually takes a few seconds."}
-      </p>
+    <section aria-labelledby="analysis-title" className="card mx-auto max-w-[520px] p-6 sm:p-8">
+      <div className="text-center">
+        <ProgressRing value={error ? 1 : progress} error={!!error} />
+        <h2 id="analysis-title" className="section-title mt-5">
+          {error ? "We couldn’t finish the analysis" : complete ? "Your report is ready" : "Analysing your statement"}
+        </h2>
+        <p className="mt-1 text-[13px] text-muted">
+          {error ? "Nothing was saved. You can try again or use a different statement." : "This usually takes a few seconds."}
+        </p>
+      </div>
 
-      <ol className="mt-8 space-y-0" aria-live="polite">
+      <ol className="group-list mt-7" aria-live="polite">
         {labels.map((label, i) => {
           const state = error && i === Math.min(active, STAGE_COUNT - 1) ? "error" : i < active ? "done" : i === active && !error ? "active" : "pending";
           return (
-            <li key={i} className="relative flex items-center gap-4 pb-6 last:pb-0">
-              {i < labels.length - 1 && (
-                <span className={`absolute left-[11px] top-7 h-[calc(100%-28px)] w-px ${i < active ? "bg-accent-600" : "bg-line"}`} aria-hidden="true" />
-              )}
-              <span className="relative flex h-6 w-6 flex-none items-center justify-center">
+            <li key={i} className="flex items-center gap-3.5 px-4 py-3">
+              <span className="flex h-[22px] w-[22px] flex-none items-center justify-center">
                 {state === "done" && (
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent-600 text-white">
-                    <svg viewBox="0 0 12 12" className="h-3 w-3" aria-hidden="true">
-                      <path d="M2.5 6.2l2.2 2.2 4.8-5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </span>
+                  <svg viewBox="0 0 16 16" className="h-[22px] w-[22px] text-positive" aria-hidden="true">
+                    <circle cx="8" cy="8" r="8" fill="currentColor" />
+                    <path d="M4.8 8.3l2.1 2.1 4.3-4.6" fill="none" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
                 )}
-                {state === "active" && (
-                  <span className="h-6 w-6 animate-spin rounded-full border-2 border-accent-100 border-t-accent-600" aria-hidden="true" />
-                )}
-                {state === "pending" && <span className="h-6 w-6 rounded-full border border-line-strong bg-white" aria-hidden="true" />}
+                {state === "active" && <span className="h-[18px] w-[18px] animate-spin rounded-full border-2 border-fill border-t-accent" aria-hidden="true" />}
+                {state === "pending" && <span className="h-[18px] w-[18px] rounded-full border-[1.5px] border-fill" aria-hidden="true" />}
                 {state === "error" && (
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-negative text-white">
-                    <svg viewBox="0 0 12 12" className="h-3 w-3" aria-hidden="true">
-                      <path d="M3.5 3.5l5 5M8.5 3.5l-5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-                    </svg>
-                  </span>
+                  <svg viewBox="0 0 16 16" className="h-[22px] w-[22px] text-negative" aria-hidden="true">
+                    <circle cx="8" cy="8" r="8" fill="currentColor" />
+                    <path d="M5.6 5.6l4.8 4.8M10.4 5.6l-4.8 4.8" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />
+                  </svg>
                 )}
               </span>
               <span
                 className={`text-[15px] ${
-                  state === "pending" ? "text-zinc-400" : state === "error" ? "font-medium text-negative" : state === "active" ? "font-medium text-ink" : "text-zinc-700"
+                  state === "pending" ? "text-faint" : state === "error" ? "font-medium text-negative" : state === "active" ? "font-semibold text-fg" : "text-fg-2"
                 }`}
               >
                 {label}
@@ -146,18 +143,42 @@ export function AnalysisStep({
       </ol>
 
       {error && (
-        <div className="mt-8">
-          <div role="alert" className="rounded-lg border border-red-200 bg-negative-bg/60 px-4 py-3 text-sm text-zinc-800">
+        <div className="mt-6">
+          <p role="alert" className="rounded-[14px] bg-negative/10 px-4 py-3 text-sm text-fg-2">
             {error}
-          </div>
-          <div className="mt-6 flex gap-3">
-            <Button onClick={() => setAttempt((a) => a + 1)}>Try again</Button>
-            <Button variant="secondary" onClick={onBack}>
+          </p>
+          <div className="mt-5 flex flex-col gap-2.5 sm:flex-row">
+            <Button className="flex-1" onClick={() => setAttempt((a) => a + 1)}>
+              Try again
+            </Button>
+            <Button variant="tinted" className="flex-1" onClick={onBack}>
               Use a different statement
             </Button>
           </div>
         </div>
       )}
     </section>
+  );
+}
+
+function ProgressRing({ value, error }: { value: number; error: boolean }) {
+  const r = 26;
+  const c = 2 * Math.PI * r;
+  return (
+    <svg viewBox="0 0 64 64" className="mx-auto h-16 w-16 -rotate-90" aria-hidden="true">
+      <circle cx="32" cy="32" r={r} fill="none" stroke="var(--fill)" strokeWidth="7" />
+      <circle
+        cx="32"
+        cy="32"
+        r={r}
+        fill="none"
+        stroke={error ? "var(--red)" : "var(--accent)"}
+        strokeWidth="7"
+        strokeLinecap="round"
+        strokeDasharray={c}
+        strokeDashoffset={c * (1 - Math.max(0.04, value))}
+        style={{ transition: "stroke-dashoffset .45s var(--ease)" }}
+      />
+    </svg>
   );
 }

@@ -3,85 +3,73 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { currentTheme, setTheme, type Theme } from "@/lib/theme";
 import { Logo } from "./logo";
 
 const LINKS = [
-  { href: "/check", label: "Check eligibility" },
-  { href: "/lender", label: "For lenders" },
-  { href: "/model", label: "Model" },
+  { href: "/check", label: "Check eligibility", short: "Check" },
+  { href: "/lender", label: "For lenders", short: "Lenders" },
+  { href: "/model", label: "Model", short: "Model" },
 ];
 
 export function SiteHeader() {
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
-
-  useEffect(() => setOpen(false), [pathname]);
-
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-white/95 backdrop-blur-sm supports-[backdrop-filter]:bg-white/85 print:hidden">
-      <div className="container-page flex h-14 items-center justify-between">
-        <Link href="/" className="-m-1 rounded-md p-1" aria-label="CreditBridge home">
-          <Logo />
+    <header className="sticky top-0 z-40 border-b border-hairline bg-[var(--nav)] backdrop-blur-[20px] backdrop-saturate-[1.8] print:hidden">
+      <div className="mx-auto grid h-14 max-w-[1200px] grid-cols-[auto_1fr_auto] items-center gap-4 px-[14px] md:grid-cols-[1fr_auto_1fr] md:px-6">
+        <Link href="/" className="justify-self-start rounded-lg" aria-label="CreditBridge home">
+          <Logo hideTextOnMobile />
         </Link>
 
-        <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
-          {LINKS.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              aria-current={isActive(l.href) ? "page" : undefined}
-              className={`rounded-md px-3 py-1.5 text-sm transition-colors ${
-                isActive(l.href) ? "text-ink font-medium" : "text-zinc-600 hover:text-ink"
-              }`}
-            >
-              {l.label}
-            </Link>
-          ))}
-          <Link
-            href="/check"
-            className="ml-3 rounded-md bg-ink px-3.5 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-800"
-          >
-            Get started
-          </Link>
+        <nav aria-label="Primary" className="seg max-w-full justify-self-center overflow-x-auto">
+          {LINKS.map((l) => {
+            const on = isActive(l.href);
+            return (
+              <Link key={l.href} href={l.href} data-on={on} aria-current={on ? "page" : undefined} className="seg-item px-2.5! md:px-4!">
+                <span className="hidden sm:inline">{l.label}</span>
+                <span className="sm:hidden">{l.short}</span>
+              </Link>
+            );
+          })}
         </nav>
 
-        <button
-          type="button"
-          className="-mr-2 inline-flex h-9 w-9 items-center justify-center rounded-md text-zinc-700 md:hidden"
-          aria-expanded={open}
-          aria-controls="mobile-nav"
-          aria-label={open ? "Close menu" : "Open menu"}
-          onClick={() => setOpen((v) => !v)}
-        >
-          <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
-            {open ? (
-              <path d="M4 4l10 10M14 4L4 14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-            ) : (
-              <path d="M2.5 5h13M2.5 9h13M2.5 13h13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-            )}
-          </svg>
-        </button>
+        <ThemeToggle />
       </div>
-
-      {open && (
-        <nav id="mobile-nav" aria-label="Primary" className="border-t border-line bg-white md:hidden">
-          <ul className="container-page flex flex-col py-2">
-            {LINKS.map((l) => (
-              <li key={l.href}>
-                <Link
-                  href={l.href}
-                  aria-current={isActive(l.href) ? "page" : undefined}
-                  className={`block rounded-md py-2.5 text-[15px] ${isActive(l.href) ? "font-medium text-ink" : "text-zinc-600"}`}
-                >
-                  {l.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      )}
     </header>
+  );
+}
+
+function ThemeToggle() {
+  const [theme, setLocal] = useState<Theme | null>(null);
+
+  useEffect(() => {
+    setLocal(currentTheme());
+    const on = (e: Event) => setLocal((e as CustomEvent<Theme>).detail);
+    window.addEventListener("themechange", on);
+    return () => window.removeEventListener("themechange", on);
+  }, []);
+
+  const dark = theme === "dark";
+  return (
+    <button
+      type="button"
+      className="icon-btn justify-self-end"
+      aria-label={dark ? "Switch to light appearance" : "Switch to dark appearance"}
+      title="Toggle appearance"
+      onClick={() => setTheme(dark ? "light" : "dark")}
+    >
+      {dark ? (
+        <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="4.2" />
+          <path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6" />
+        </svg>
+      ) : (
+        <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="currentColor" aria-hidden="true">
+          <path d="M20.5 14.6A8.5 8.5 0 0 1 9.4 3.5a8.5 8.5 0 1 0 11.1 11.1Z" />
+        </svg>
+      )}
+    </button>
   );
 }

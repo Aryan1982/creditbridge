@@ -5,7 +5,7 @@ const NAMES = {
   te: {checking_status:"చెకింగ్ ఖాతా",savings_status:"పొదుపు",employment:"ఉద్యోగ కాలం",residence_since:"నివాస సంవత్సరాలు",property_magnitude:"ఆస్తులు",housing:"నివాసం",job:"ఉద్యోగ రకం",num_dependents:"ఆధారితులు",own_telephone:"ఫోన్",duration:"రుణ కాలం (నెలలు)",credit_amount:"రుణ మొత్తం",installment_commitment:"ఆదాయంలో వాయిదా %",purpose:"ప్రయోజనం",other_parties:"హామీదారు",age:"వయస్సు",credit_history:"క్రెడిట్ చరిత్ర",existing_credits:"ప్రస్తుత రుణాలు",other_payment_plans:"ఇతర చెల్లింపు ప్రణాళికలు"},
 };
 const T = {
-  en:{ok:"APPROVE",no:"REFER / DECLINE",pd:"Estimated default probability",up:"lowers risk",down:"raises risk",cf:"Change",to:"to",none:"Already approved — no changes needed.",reach:"→ projected score",stuck:"No single actionable change reaches approval; consider a smaller amount or a guarantor."},
+  en:{ok:"APPROVE",no:"REFER / DECLINE",pd:"Estimated default probability",up:"lowers risk",down:"raises risk",cf:"Change",to:"to",none:"Already approved — no changes needed.",reach:"→ projected score",stuck:"These changes alone don't reach approval yet; a smaller loan amount or shorter duration would help further."},
   hi:{ok:"स्वीकृत",no:"समीक्षा / अस्वीकृत",pd:"अनुमानित डिफ़ॉल्ट संभावना",up:"जोखिम घटाता है",down:"जोखिम बढ़ाता है",cf:"बदलें",to:"से",none:"पहले से स्वीकृत — कोई बदलाव ज़रूरी नहीं।",reach:"→ अनुमानित स्कोर",stuck:"कोई एक बदलाव पर्याप्त नहीं; कम राशि या गारंटर पर विचार करें।"},
   te:{ok:"ఆమోదం",no:"సమీక్ష / తిరస్కరణ",pd:"అంచనా డిఫాల్ట్ సంభావ్యత",up:"ప్రమాదాన్ని తగ్గిస్తుంది",down:"ప్రమాదాన్ని పెంచుతుంది",cf:"మార్చండి",to:"కు",none:"ఇప్పటికే ఆమోదించబడింది — మార్పులు అవసరం లేదు.",reach:"→ అంచనా స్కోర్",stuck:"ఒక్క మార్పుతో ఆమోదం రాదు; తక్కువ మొత్తం లేదా హామీదారును పరిగణించండి."},
 };
@@ -22,16 +22,48 @@ const PRESETS = {
   gig: {...DEFAULTS, checking_status:"0<=X<200", savings_status:"100<=X<500", employment:"1<=X<4", age:29, housing:"rent", job:"skilled", duration:18, credit_amount:2500, installment_commitment:2, purpose:"new car", own_telephone:"yes", credit_history:"all paid"},
   salaried: {...DEFAULTS, checking_status:"no checking", savings_status:">=1000", employment:">=7", age:38, housing:"own", job:"high qualif/self emp/mgmt", duration:12, credit_amount:4000, installment_commitment:2, purpose:"furniture/equipment", own_telephone:"yes", credit_history:"existing paid"},
 };
+const LABELS = {
+  checking_status: {"<0":"Overdrawn","0<=X<200":"Low balance",">=200":"Healthy balance","no checking":"No current account"},
+  savings_status: {"<100":"Under 100","100<=X<500":"100 – 500","500<=X<1000":"500 – 1,000",">=1000":"Over 1,000","no known savings":"No savings"},
+  employment: {"unemployed":"Not employed","<1":"Less than 1 year","1<=X<4":"1 – 4 years","4<=X<7":"4 – 7 years",">=7":"7+ years"},
+  credit_history: {"no credits/all paid":"No previous loans","all paid":"All loans repaid","existing paid":"Current loans on track","delayed previously":"Past late payments","critical/other existing credit":"Loans with other lenders"},
+  property_magnitude: {"real estate":"Property / land","life insurance":"Life insurance or savings plan","car":"Vehicle","no known property":"No assets"},
+  housing: {"own":"Owns home","rent":"Rents","for free":"Lives rent-free"},
+  job: {"unemp/unskilled non res":"Unskilled, non-resident","unskilled resident":"Unskilled worker","skilled":"Skilled worker","high qualif/self emp/mgmt":"Manager / self-employed / professional"},
+  own_telephone: {"none":"No phone in own name","yes":"Has phone in own name"},
+  purpose: {"business":"Business","domestic appliance":"Home appliance","education":"Education","furniture/equipment":"Furniture / equipment","new car":"New vehicle","used car":"Used vehicle","other":"Other","radio/tv":"Electronics","repairs":"Repairs","retraining":"Training / reskilling"},
+  other_parties: {"none":"None","guarantor":"Guarantor","co applicant":"Co-applicant"},
+  other_payment_plans: {"none":"None","bank":"Bank instalment plan","stores":"Store instalment plan"},
+};
+const SLIDERS = { credit_amount: 50, duration: 1 };
+const fmt = (f, v) => LABELS[f]?.[v] ?? (f === "credit_amount" ? Number(v).toLocaleString("en-IN") : f === "duration" ? `${v} months` : v);
+let steps = [], shown = null, anim = 0;
+function setPreset(name) { document.querySelectorAll(".presets button").forEach((b) => b.classList.toggle("on", b.dataset.p === name)); }
 function applyPreset(name) {
   for (const [f, v] of Object.entries(PRESETS[name])) { const el = $("f_" + f); if (el) el.value = v; }
-  document.querySelectorAll(".presets button").forEach((b) => b.classList.toggle("on", b.dataset.p === name));
+  setPreset(name);
   render();
+}
+function applySteps(list) {
+  for (const s of list) $("f_" + s.f).value = s.v;
+  setPreset(null); render();
 }
 function gauge(score, ok) {
   const r = 80, frac = (score - 300) / 600, col = ok ? "#047857" : "#b91c1c";
-  return `<svg class="gauge" viewBox="0 0 180 100" aria-hidden="true">
+  if (!$("gArc")) $("gaugeBox").innerHTML = `<svg class="gauge" viewBox="0 0 180 100" aria-hidden="true">
   <path d="M10 92 A80 80 0 0 1 170 92" fill="none" stroke="#efedeb" stroke-width="8" stroke-linecap="round"/>
-  <path d="M10 92 A80 80 0 0 1 170 92" fill="none" stroke="${col}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${Math.PI * r * frac} 999"/></svg>`;
+  <path id="gArc" d="M10 92 A80 80 0 0 1 170 92" fill="none" stroke-width="8" stroke-linecap="round" stroke-dasharray="0 999"/></svg>`;
+  requestAnimationFrame(() => { const a = $("gArc"); a.style.strokeDasharray = `${Math.PI * r * frac} 999`; a.style.stroke = col; });
+}
+function countTo(to) {
+  const from = shown ?? 300, t0 = performance.now(), id = ++anim; shown = to;
+  const step = (now) => {
+    if (id !== anim) return;
+    const k = Math.min(1, (now - t0) / 600), e = 1 - Math.pow(1 - k, 3);
+    $("points").textContent = Math.round(from + (to - from) * e);
+    if (k < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
 }
 
 function contributions(x) {
@@ -78,9 +110,11 @@ function buildForm() {
   const field = (f) => {
     const s = feats[f];
     const input = s.type === "cat"
-      ? `<select id="f_${f}">${Object.keys(s.levels).map((l) => `<option${l === DEFAULTS[f] ? " selected" : ""}>${l}</option>`).join("")}</select>`
+      ? `<select id="f_${f}">${Object.keys(s.levels).map((l) => `<option value="${l}"${l === DEFAULTS[f] ? " selected" : ""}>${fmt(f, l)}</option>`).join("")}</select>`
+      : SLIDERS[f]
+      ? `<input id="f_${f}" type="range" min="${s.min}" max="${s.max}" step="${SLIDERS[f]}" value="${DEFAULTS[f]}">`
       : `<input id="f_${f}" type="number" inputmode="numeric" min="${s.min}" max="${s.max}" value="${DEFAULTS[f]}">`;
-    return `<div class="fld"><label for="f_${f}" data-f="${f}">${NAMES[lang][f]}</label>${input}</div>`;
+    return `<div class="fld${SLIDERS[f] ? " wide" : ""}"><label for="f_${f}"><span data-f="${f}">${NAMES[lang][f]}</span>${SLIDERS[f] ? `<output id="v_${f}"></output>` : ""}</label>${input}</div>`;
   };
   const grouped = new Set(GROUPS.flatMap(([, fs]) => fs));
   const rest = Object.keys(feats).filter((f) => !grouped.has(f));
@@ -88,8 +122,21 @@ function buildForm() {
     const all = i === GROUPS.length - 1 ? [...fs, ...rest] : fs;
     return `<fieldset><div class="grp">${title}${hint ? `<small>${hint}</small>` : ""}</div>${all.filter((f) => feats[f]).map(field).join("")}</fieldset>`;
   }).join("");
-  form.addEventListener("input", render);
+  form.addEventListener("input", () => { setPreset(null); render(); });
   document.querySelectorAll(".presets button").forEach((b) => b.onclick = () => applyPreset(b.dataset.p));
+  $("cf").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-i]"); if (!b) return;
+    applySteps(b.dataset.i === "all" ? steps : [steps[+b.dataset.i]]);
+  });
+  $("printBtn").onclick = () => { $("letterDate").textContent = new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }); window.print(); };
+  $("copyBtn").onclick = async () => {
+    const b = $("copyBtn");
+    try { await navigator.clipboard.writeText(location.href); b.textContent = "Link copied"; }
+    catch { prompt("Copy this link", location.href); }
+    setTimeout(() => b.textContent = "Copy link", 1600);
+  };
+  const h = new URLSearchParams(location.hash.slice(1));
+  for (const [f, v] of h) { const el = $("f_" + f); if (el && feats[f]) el.value = v; }
 }
 function read() {
   const x = {};
@@ -99,23 +146,28 @@ function read() {
 function render() {
   const x = read(), t = T[lang], n = NAMES[lang], p = pd(x), ok = p < M.threshold, sc = points(p);
   const label = (s) => lang === "en" ? s[0] + s.slice(1).toLowerCase() : s;
-  document.querySelectorAll("#form label[data-f]").forEach((l) => l.textContent = n[l.dataset.f]);
-  $("gaugeBox").innerHTML = gauge(sc, ok);
-  $("points").textContent = sc;
+  document.querySelectorAll("#form [data-f]").forEach((l) => l.textContent = n[l.dataset.f]);
+  for (const f of Object.keys(SLIDERS)) if ($("v_" + f)) $("v_" + f).textContent = fmt(f, x[f]);
+  history.replaceState(null, "", "#" + new URLSearchParams(Object.entries(x)).toString());
+  gauge(sc, ok);
+  if (sc !== shown) countTo(sc);
   $("decision").textContent = label(ok ? t.ok : t.no); $("decision").className = "decision " + (ok ? "ok" : "no");
   $("pd").textContent = `${t.pd}: ${(p * 100).toFixed(1)}%`;
   $("barfill").style.width = ((sc - 300) / 6) + "%";
   const c = Object.entries(contributions(x)).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
-  $("reasons").innerHTML = c.slice(0, 4).map(([f, v]) => `<li><span class="f">${n[f]}</span><span class="val">${x[f]}</span><span class="chip ${v < 0 ? "pos" : "neg"}">${v < 0 ? "+" : "−"} ${v < 0 ? t.up : t.down}</span></li>`).join("");
+  $("reasons").innerHTML = c.slice(0, 4).map(([f, v]) => `<li><span class="f">${n[f]}</span><span class="val">${fmt(f, x[f])}</span><span class="chip ${v < 0 ? "pos" : "neg"}">${v < 0 ? "+" : "−"} ${v < 0 ? t.up : t.down}</span></li>`).join("");
   const max = Math.max(...c.map(([, v]) => Math.abs(v))) || 1;
   $("contrib").innerHTML = c.map(([f, v]) => {
     const w = Math.abs(v) / max * 50; const left = v < 0 ? 50 - w : 50;
     return `<div class="contrib"><span class="n" title="${n[f]}">${n[f]}</span><div class="track"><b style="left:${left}%;width:${w}%;background:${v < 0 ? "var(--ok)" : "var(--bad)"}"></b></div></div>`;
   }).join("");
-  if (ok) $("cf").innerHTML = `<li class="done">${t.none}</li>`;
+  if (ok) { steps = []; $("cf").innerHTML = `<li class="done">${t.none}</li>`; }
   else {
     const r = counterfactual(x), reach = t.reach.replace(/^→\s*/, "");
-    $("cf").innerHTML = r.steps.map((s) => `<li>${t.cf} <b>${n[s.f]}</b> <span class="to">${x[s.f]} ${t.to}</span> <b>${s.v}</b><span class="proj">${reach} <span class="num">${points(s.p)}</span></span></li>`).join("") + (r.ok ? "" : `<li class="stuck">${t.stuck}</li>`);
+    steps = r.steps;
+    $("cf").innerHTML = steps.map((s, i) => `<li><div class="st">${t.cf} <b>${n[s.f]}</b> <span class="to">${fmt(s.f, x[s.f])} ${t.to}</span> <b>${fmt(s.f, s.v)}</b><span class="proj">${reach} <span class="num">${points(s.p)}</span></span></div><button type="button" class="btn sm" data-i="${i}">Apply</button></li>`).join("") +
+      (r.ok ? "" : `<li class="stuck">${t.stuck}</li>`) +
+      (steps.length > 1 ? `<li class="all"><button type="button" class="btn primary" data-i="all">Apply all changes</button></li>` : "");
   }
 }
 function renderLangs() {

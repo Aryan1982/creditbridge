@@ -82,13 +82,26 @@ select:focus,input:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(29,78
 .chip.pos{color:var(--ok);background:var(--ok-soft)}.chip.neg{color:var(--bad);background:var(--bad-soft)}
 
 .cf{list-style:none;margin:0 0 16px;padding:0;counter-reset:s}
-.cf li{counter-increment:s;position:relative;padding:10px 0 10px 36px;border-top:1px solid var(--line2)}
+.cf li{counter-increment:s;position:relative;padding:10px 0 10px 36px;border-top:1px solid var(--line2);display:flex;align-items:flex-start;gap:12px}
+.cf li .st{flex:1;min-width:0}
 .cf li:first-child{border-top:0;padding-top:2px}
 .cf li:before{content:counter(s);position:absolute;left:0;top:8px;width:22px;height:22px;border-radius:50%;border:1px solid var(--line);font-size:12px;font-weight:600;display:grid;place-items:center;color:var(--acc);background:var(--acc-soft);border-color:#c7d7fe}
 .cf li:first-child:before{top:0}
 .cf li.done:before{content:"";background:var(--ok-soft);border-color:#a7f3d0}
-.cf li.stuck{padding-left:0;color:var(--mut);font-size:13px}.cf li.stuck:before{display:none}
+.cf li.stuck,.cf li.all{padding-left:0;color:var(--mut);font-size:13px}.cf li.stuck:before,.cf li.all:before{display:none}
+.cf li.all{border-top:0;padding-top:4px}
 .cf .to{color:var(--mut)}.cf .proj{display:block;font-size:12px;color:var(--mut);margin-top:2px}
+.btn{font:inherit;font-size:13px;font-weight:500;height:32px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--fg);cursor:pointer;white-space:nowrap;transition:background .12s,border-color .12s}
+.btn:hover{background:#f5f5f4;border-color:#d6d3d1}
+.btn.sm{height:28px;padding:0 10px;font-size:12px}
+.btn.primary{background:var(--acc);border-color:var(--acc);color:#fff}.btn.primary:hover{background:#1e40af}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+#gArc{transition:stroke-dasharray .6s cubic-bezier(.2,.8,.2,1),stroke .3s}
+.fld.wide{grid-column:1/-1}
+.fld.wide label{display:flex;justify-content:space-between}
+.fld output{color:var(--fg);font-weight:500;font-variant-numeric:tabular-nums}
+input[type=range]{height:20px;padding:0;border:0;background:transparent;accent-color:var(--acc);box-shadow:none}
+.letter-head{display:none}
 
 .contrib{display:grid;grid-template-columns:minmax(110px,190px) 1fr;gap:12px;align-items:center;font-size:13px;padding:5px 0}
 .contrib .n{color:var(--fg2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -106,7 +119,19 @@ footer{border-top:1px solid var(--line);color:var(--mut);font-size:12px;padding:
 
 @media(max-width:1100px){.grid2{grid-template-columns:1fr}}
 @media(max-width:960px){main.wrap{grid-template-columns:1fr}aside.card{position:static;max-height:none}}
-@media(max-width:560px){.wrap{padding:0 16px}.intro{padding:24px 0 16px}.intro h1{font-size:22px}.card{padding:20px}.divider{margin:20px -20px}.big{font-size:48px}.dec{margin-left:0;text-align:left}.contrib{grid-template-columns:110px 1fr;gap:8px}}
+@media(max-width:560px){.wrap{padding:0 16px}.intro{padding:24px 0 16px}.intro h1{font-size:22px}.card{padding:20px}.divider{margin:20px -20px}.big{font-size:48px}.dec{margin-left:0;text-align:left}.contrib{grid-template-columns:110px 1fr;gap:8px}.hero-top{flex-direction:column}}
+@media print{
+  @page{margin:18mm}
+  body{background:#fff;font-size:12pt}
+  nav,.intro,aside,footer,.actions,.contrib-card,.cf button,.cf li.all,.foot-note{display:none!important}
+  main.wrap{display:block;padding:0;max-width:none}.col,.grid2{display:block}
+  .card{border:0;padding:0;margin:0 0 20px;break-inside:avoid}
+  .divider{margin:16px 0}
+  .letter-head{display:block;border-bottom:1px solid #000;padding-bottom:10px;margin-bottom:20px}
+  .letter-head b{font-size:16pt}.letter-head span{float:right}
+  .decision{border:1px solid currentColor}
+  .letter-foot{display:block!important;margin-top:24px;font-size:10pt;color:#444}
+}
 </style>
 </head>
 <body>
@@ -136,7 +161,9 @@ footer{border-top:1px solid var(--line);color:var(--mut);font-size:12px;padding:
 
 <div class="col">
 <section class="card">
-<div class="hero-top"><div><h2>Your result</h2><p class="sub">Credit score, 300–900</p></div></div>
+<div class="letter-head"><b>CreditBridge — Credit decision</b><span id="letterDate"></span></div>
+<div class="hero-top"><div><h2>Your result</h2><p class="sub">Credit score, 300–900</p></div>
+<div class="actions"><button type="button" class="btn" id="copyBtn">Copy link</button><button type="button" class="btn" id="printBtn">Download decision letter</button></div></div>
 <div class="score">
 <div id="gaugeBox"></div>
 <div><div class="big" id="points">–</div><div class="scale">out of 900</div></div>
@@ -150,9 +177,10 @@ footer{border-top:1px solid var(--line);color:var(--mut);font-size:12px;padding:
 
 <div class="grid2">
 <section class="card"><h2>How to get approved</h2><ol class="cf" id="cf"></ol><p class="foot-note">Only includes things you can realistically change.</p></section>
-<section class="card"><h2>What helped and what hurt</h2><div id="contrib"></div>
+<section class="card contrib-card"><h2>What helped and what hurt</h2><div id="contrib"></div>
 <div class="legend"><span><i style="background:var(--ok)"></i>Helps your score</span><span><i style="background:var(--bad)"></i>Hurts your score</span></div></section>
 </div>
+<p class="letter-foot" style="display:none">Estimates only — not a final lending decision.</p>
 </div>
 </main>
 

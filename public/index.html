@@ -5,22 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>CreditBridge — Explainable credit scoring for the unbanked</title>
 <style>
-:root{--bg:#0b1020;--card:#131a30;--line:#24304f;--fg:#e8ecf7;--mut:#93a0c0;--acc:#5b8cff;--ok:#2ecc8f;--bad:#ff5d6c;--warn:#ffb547}
-*{box-sizing:border-box}body{margin:0;font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--fg)}
-header{padding:28px 32px 8px}h1{margin:0;font-size:28px}h1 span{color:var(--acc)}header p{margin:4px 0;color:var(--mut)}
+:root{--bg:#070b18;--card:rgba(20,28,52,.72);--line:rgba(120,140,200,.16);--fg:#eef1fa;--mut:#8f9bbd;--acc:#6d8dff;--acc2:#a26bff;--ok:#2ee59d;--bad:#ff5d73;--warn:#ffb547}
+*{box-sizing:border-box}body{margin:0;font:15px/1.5 Inter,system-ui,-apple-system,Segoe UI,sans-serif;color:var(--fg);background:radial-gradient(1200px 600px at 10% -10%,rgba(109,141,255,.18),transparent 60%),radial-gradient(900px 500px at 100% 0,rgba(162,107,255,.14),transparent 60%),var(--bg);min-height:100vh}
+header{padding:32px 32px 4px;display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap}
+h1{margin:0;font-size:34px;letter-spacing:-.02em}h1 span{background:linear-gradient(90deg,var(--acc),var(--acc2));-webkit-background-clip:text;color:transparent}header p{margin:4px 0;color:var(--mut)}
+.kpis{display:flex;gap:10px;flex-wrap:wrap}.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 14px;backdrop-filter:blur(10px)}.kpi b{display:block;font-size:20px}.kpi span{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
+.presets{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 4px}.presets button{flex:1;background:linear-gradient(180deg,rgba(109,141,255,.16),rgba(109,141,255,.05));border:1px solid var(--line);color:var(--fg);border-radius:10px;padding:8px;cursor:pointer;font:inherit;font-size:13px;transition:.15s}.presets button:hover{border-color:var(--acc);transform:translateY(-1px)}
+.gauge{width:170px;height:100px}.gauge text{fill:var(--fg)}
+.card{transition:border-color .2s}.card:hover{border-color:rgba(120,140,200,.32)}
+#form{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}#form>div{min-width:0}
+aside.card{position:sticky;top:16px;max-height:calc(100vh - 32px);overflow:auto}
 main{display:grid;grid-template-columns:minmax(320px,420px) 1fr;gap:20px;padding:20px 32px 40px}
 @media(max-width:900px){main{grid-template-columns:1fr}}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;backdrop-filter:blur(14px);box-shadow:0 10px 40px rgba(0,0,0,.25)}
 h2{font-size:16px;margin:0 0 12px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}
 label{display:block;font-size:13px;color:var(--mut);margin:8px 0 3px}
-select,input{width:100%;padding:8px 10px;background:#0e1426;color:var(--fg);border:1px solid var(--line);border-radius:8px;font:inherit}
+select,input{width:100%;padding:8px 10px;background:rgba(8,12,26,.7);color:var(--fg);border:1px solid var(--line);border-radius:9px;font:inherit;font-size:14px;outline:none;transition:border-color .15s}select:focus,input:focus{border-color:var(--acc)}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .tag{font-size:10px;padding:1px 6px;border-radius:6px;margin-left:6px;vertical-align:middle}
 .tag.b{background:#3a2a55;color:#c9a8ff}.tag.a{background:#173d33;color:#7be3bb}
 .score{display:flex;align-items:center;gap:24px}
-.big{font-size:56px;font-weight:700;line-height:1}
-.decision{font-size:20px;font-weight:700;padding:6px 14px;border-radius:10px;display:inline-block}
-.decision.ok{background:#123e2e;color:var(--ok)}.decision.no{background:#401a22;color:var(--bad)}
+.big{font-size:60px;font-weight:800;line-height:1;letter-spacing:-.03em}
+.decision{font-size:20px;font-weight:800;padding:8px 16px;border-radius:12px;display:inline-block;letter-spacing:.03em}
+.decision.ok{background:rgba(46,229,157,.12);color:var(--ok);box-shadow:0 0 30px rgba(46,229,157,.25)}.decision.no{background:rgba(255,93,115,.12);color:var(--bad);box-shadow:0 0 30px rgba(255,93,115,.25)}
 .bar{height:10px;background:#0e1426;border-radius:6px;overflow:hidden;margin-top:10px}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--bad),var(--warn),var(--ok))}
 .reasons li{margin:6px 0}.pos{color:var(--ok)}.neg{color:var(--bad)}
 .contrib{display:grid;grid-template-columns:180px 1fr 60px;gap:8px;align-items:center;font-size:13px;margin:4px 0}
@@ -35,19 +42,21 @@ footer{padding:0 32px 32px;color:var(--mut);font-size:12px}
 </head>
 <body>
 <header>
-<h1>Credit<span>Bridge</span></h1>
-<p>Explainable alternative-data credit scoring for thin-file &amp; unbanked applicants · Neural Storm 2026 · HI-04</p>
+<div><h1>Credit<span>Bridge</span></h1>
+<p>Explainable alternative-data credit scoring for thin-file &amp; unbanked applicants · Neural Storm 2026 · HI-04</p></div>
+<div class="kpis" id="kpis"></div>
 </header>
 <main>
-<section class="card">
+<aside class="card">
 <h2>Applicant</h2>
+<div class="presets"><button data-p="student">🎓 Student, no history</button><button data-p="gig">🛵 Gig worker</button><button data-p="salaried">💼 Salaried saver</button></div>
 <div class="mut">Tags: <span class="tag b">bureau</span> traditional credit-bureau data · <span class="tag a">alt</span> alternative data. Sex and nationality are never used.</div>
 <form id="form"></form>
-</section>
+</aside>
 <section style="display:grid;gap:20px;align-content:start">
 <div class="card">
 <div style="display:flex;justify-content:space-between;align-items:center"><h2>Decision</h2><div class="langs" id="langs"></div></div>
-<div class="score"><div><div class="big" id="points">–</div><div class="mut">CreditBridge score (300–900)</div></div>
+<div class="score"><div id="gaugeBox"></div><div><div class="big" id="points">–</div><div class="mut">CreditBridge score (300–900)</div></div>
 <div><div class="decision" id="decision">–</div><div class="mut" id="pd"></div></div></div>
 <div class="bar"><i id="barfill" style="width:0"></i></div>
 <h2 style="margin-top:18px">Why</h2><ul class="reasons" id="reasons"></ul>

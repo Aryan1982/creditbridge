@@ -17,6 +17,23 @@ let M, lang = "en";
 const $ = (id) => document.getElementById(id);
 const sig = (z) => 1 / (1 + Math.exp(-z));
 const points = (p) => Math.round(Math.min(900, Math.max(300, 600 - 50 * Math.log2(p / (1 - p)) )));
+const PRESETS = {
+  student: {...DEFAULTS, checking_status:"0<=X<200", savings_status:"<100", employment:"<1", age:22, housing:"rent", job:"unskilled resident", duration:30, credit_amount:4000, installment_commitment:4, purpose:"education", property_magnitude:"no known property", credit_history:"no credits/all paid"},
+  gig: {...DEFAULTS, checking_status:"0<=X<200", savings_status:"100<=X<500", employment:"1<=X<4", age:29, housing:"rent", job:"skilled", duration:18, credit_amount:2500, installment_commitment:2, purpose:"new car", own_telephone:"yes", credit_history:"all paid"},
+  salaried: {...DEFAULTS, checking_status:"no checking", savings_status:">=1000", employment:">=7", age:38, housing:"own", job:"high qualif/self emp/mgmt", duration:12, credit_amount:4000, installment_commitment:2, purpose:"furniture/equipment", own_telephone:"yes", credit_history:"existing paid"},
+};
+function applyPreset(name) {
+  for (const [f, v] of Object.entries(PRESETS[name])) { const el = $("f_" + f); if (el) el.value = v; }
+  render();
+}
+function gauge(score, ok) {
+  const r = 70, cx = 85, cy = 88, a = Math.PI * (1 - (score - 300) / 600);
+  const x = cx + r * Math.cos(a), y = cy - r * Math.sin(a);
+  return `<svg class="gauge" viewBox="0 0 170 100"><defs><linearGradient id="gg"><stop offset="0" stop-color="#ff5d73"/><stop offset=".5" stop-color="#ffb547"/><stop offset="1" stop-color="#2ee59d"/></linearGradient></defs>
+  <path d="M15 88 A70 70 0 0 1 155 88" fill="none" stroke="rgba(120,140,200,.18)" stroke-width="12" stroke-linecap="round"/>
+  <path d="M15 88 A70 70 0 0 1 155 88" fill="none" stroke="url(#gg)" stroke-width="12" stroke-linecap="round" stroke-dasharray="${Math.PI * r * (score - 300) / 600} 999"/>
+  <circle cx="${x}" cy="${y}" r="7" fill="${ok ? "#2ee59d" : "#ff5d73"}" stroke="#070b18" stroke-width="3"/></svg>`;
+}
 
 function contributions(x) {
   const out = {};
@@ -59,9 +76,10 @@ function buildForm() {
     const input = s.type === "cat"
       ? `<select id="f_${f}">${Object.keys(s.levels).map((l) => `<option${l === DEFAULTS[f] ? " selected" : ""}>${l}</option>`).join("")}</select>`
       : `<input id="f_${f}" type="number" min="${s.min}" max="${s.max}" value="${DEFAULTS[f]}">`;
-    return `<label>${NAMES.en[f]}${tag}</label>${input}`;
+    return `<div><label>${NAMES.en[f]}${tag}</label>${input}</div>`;
   }).join("");
   form.addEventListener("input", render);
+  document.querySelectorAll(".presets button").forEach((b) => b.onclick = () => applyPreset(b.dataset.p));
 }
 function read() {
   const x = {};
@@ -70,6 +88,7 @@ function read() {
 }
 function render() {
   const x = read(), t = T[lang], n = NAMES[lang], p = pd(x), ok = p < M.threshold;
+  $("gaugeBox").innerHTML = gauge(points(p), ok);
   $("points").textContent = points(p);
   $("decision").textContent = ok ? t.ok : t.no; $("decision").className = "decision " + (ok ? "ok" : "no");
   $("pd").textContent = `${t.pd}: ${(p * 100).toFixed(1)}% · threshold ${(M.threshold * 100).toFixed(1)}%`;
@@ -93,6 +112,9 @@ function renderMetrics() {
     rows.map(([k, v]) => `<tr><td>${k.replace(/_/g, " ")}</td><td>${v.roc_auc}</td><td>${v.ks}</td><td>${v.brier}</td><td>${v.f1_bad}</td></tr>`).join("");
   const th = m.thin_file_auc;
   $("thin").textContent = `Thin-file applicants (n=${th.n}, no/fully-paid prior credit): bureau-only AUC ${th.logreg_bureau_only} vs alternative-data AUC ${th.logreg_alternative_only} vs combined ${th.logreg_combined}.`;
+  const bo = m.models.logreg_bureau_only, ao = m.models.logreg_alternative_only;
+  $("kpis").innerHTML = [[m.models.logreg_combined.roc_auc, "ROC-AUC (deployed)"], ["+" + (ao.roc_auc - bo.roc_auc).toFixed(2), "AUC lift: alt vs bureau"], [th.logreg_alternative_only, "Thin-file AUC"], [m.fairness.sex.demographic_parity_ratio, "Sex parity ratio"]]
+    .map(([v, l]) => `<div class="kpi"><b>${v}</b><span>${l}</span></div>`).join("");
   $("fair").innerHTML = `<tr><th>Group</th><th>n</th><th>Approval</th><th>Good-payer approval</th></tr>` +
     Object.entries(m.fairness).map(([attr, a]) => Object.entries(a.groups).map(([g, r]) => `<tr><td>${attr}: ${g}</td><td>${r.n}</td><td>${(r.approval_rate * 100).toFixed(1)}%</td><td>${(r.good_payer_approval_rate * 100).toFixed(1)}%</td></tr>`).join("") +
       `<tr><td colspan="4" class="mut">${attr}: parity ratio ${a.demographic_parity_ratio} · equal-opportunity gap ${a.equal_opportunity_diff}</td></tr>`).join("");

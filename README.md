@@ -4,7 +4,7 @@
 
 **Live demo:** https://creditbridge-bay.vercel.app · **Repo:** https://github.com/Aryan1982/creditbridge
 
-**Team:** CreditBridge — Aryan (solo)
+**Team:** CreditBridge — Aryan Thakor (solo)
 
 ![CreditBridge screenshot](docs/screenshot.png)
 
@@ -45,7 +45,7 @@ The deployed scorecard is within 0.006 AUC of gradient boosting while staying fu
 | Age 25+ (n=851) | 58.8% | 70.8% |
 | Age <25 (n=149) | 36.9% | 52.3% |
 
-Sex: parity ratio 0.94, equal-opportunity gap 0.017 — within the 0.8 four-fifths rule. **Age: parity ratio 0.63 — fails the four-fifths rule.** Younger applicants are disadvantaged; this is shown openly in the app and is the top item under limitations.
+Sex: parity ratio 0.94, equal-opportunity gap 0.017 — within the 0.8 four-fifths rule. **Age: parity ratio 0.63 — fails the four-fifths rule.** Younger applicants are disadvantaged; this is the top item under limitations.
 
 ## Architecture
 

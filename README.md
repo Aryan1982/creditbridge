@@ -46,6 +46,19 @@ flowchart LR
 | `/lender` | NBFC / MFI credit team | Portfolio of applicants with score, decision, affordability and flagged statements; drill into any report |
 | `/model` | Risk / compliance | Model card: accuracy, calibration, ablations, per-persona performance, fairness, external validation, limitations |
 
+## Models at a glance
+
+| Component | Type | Model | Input | Output | Result |
+|---|---|---|---|---|---|
+| Transaction categorizer | ML (NLP) | Multinomial logistic regression on char 3–5-gram + word TF-IDF (12,000 features) + money-in/out flag | Raw bank narration | 1 of 27 categories + confidence | 86.0% accuracy, 0.797 macro-F1 on unseen merchants |
+| Risk scorecard (deployed) | ML (credit risk) | Sign-constrained L2 logistic regression (SciPy L-BFGS-B) on 17 standardized cash-flow features | Cash-flow features | Default probability → 300–900 score, A–E band, decision, reason codes | ROC-AUC 0.718 (5-fold CV) |
+| Benchmarks (not deployed) | ML | WoE-binned scorecard; `HistGradientBoostingClassifier` | Same 17 features, same folds | Default probability | ROC-AUC 0.726 / 0.723 |
+| Authenticity checks | Rules | Balance continuity, PDF metadata, round-tripping, salary consistency, duplicates, gaps | Parsed statement + PDF metadata | pass / warn / fail + evidence rows | All genuine samples pass; both tampered samples fail |
+| Affordability & improvements | Formula + search | FOIR-capped EMI; greedy counterfactual search re-scored with the scorecard | Features + loan request | Max EMI, recommended amount, actions with projected score | — |
+| Summaries (EN / HI / TE) | Templates | Fixed sentence templates filled with the applicant's numbers | Report | Plain-language summary | — |
+
+**No LLM or generative AI is used anywhere in the product.** Both ML models are deliberately interpretable: lending decisions must be explainable, and the deployed scorecard gives up less than 0.01 AUC against the black-box benchmark to make every reason code exact.
+
 ## What makes it hard (and how we solved it)
 
 **1. No public data exists** for Indian bank statements with repayment outcomes. We built a persona-based simulator (`ml/simulator.py`): salaried, gig workers, shopkeepers, farmers, students and homemakers with bank-specific narration formats (SBI, HDFC, ICICI, Axis, Kotak, Canara, BoB, PNB), truncation and typos. Hidden traits (money discipline, repayment priority, income-shock risk, liquidity stress, betting and loan-app propensity) drive what appears in the statement. **Default is simulated over a separate future 12-month window from hidden traits plus fresh shocks and noise**, so the model has to infer risk, not read it off a column.
@@ -111,7 +124,7 @@ Tests cover every sample format parsing identically, genuine statements passing 
 
 ## Tech stack
 
-- **ML / backend (Python):** scikit-learn, pandas, numpy (training); numpy, FastAPI, pdfplumber (runtime); reportlab (sample PDF generation)
+- **ML / backend (Python):** scikit-learn, SciPy, pandas, numpy (training); numpy, FastAPI, pdfplumber (runtime); reportlab (sample PDF generation)
 - **Frontend:** Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, Recharts
 - **Deployment:** Vercel (Next.js + Python serverless function)
 - **Demo video:** Remotion (`video/`)

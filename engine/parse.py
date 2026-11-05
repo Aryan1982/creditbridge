@@ -11,6 +11,7 @@ from __future__ import annotations
 import csv
 import io
 import json
+import math
 import re
 from datetime import date, datetime
 
@@ -65,14 +66,19 @@ def parse_date(value) -> str | None:
 
 _AMOUNT_STRIP = re.compile(r"(₹|rs\.?|inr|\s|,)", re.I)
 _AMOUNT_TOKEN = r"-?\(?(?:₹\s?)?\d{1,3}(?:,\d{2,3})*(?:\.\d{1,2})?\)?(?:\s?(?:Cr|Dr|CR|DR))?|-?\d+\.\d{2}"
+_MAX_AMOUNT = 1e12  # ₹1 lakh crore: no single statement row is larger
 
 
 def parse_amount(value) -> float | None:
-    """'₹1,23,456.50' -> 123456.5; '(500)' -> -500; '1,000 Dr' -> -1000; ''/'-' -> None."""
-    if value is None:
+    """'₹1,23,456.50' -> 123456.5; '(500)' -> -500; '1,000 Dr' -> -1000; ''/'-'/'nan'/'inf' -> None."""
+    if value is None or isinstance(value, bool):
         return None
     if isinstance(value, (int, float)):
-        return float(value)
+        try:
+            v = float(value)
+        except OverflowError:  # int too large for a float
+            return None
+        return v if math.isfinite(v) and abs(v) < _MAX_AMOUNT else None
     s = str(value).strip()
     if not s or s in {"-", "--", "—", "NA", "N/A", "nil", "Nil"}:
         return None
@@ -90,9 +96,12 @@ def parse_amount(value) -> float | None:
     elif s.startswith("+"):
         s = s[1:]
     try:
-        return sign * float(s)
+        v = sign * float(s)
     except ValueError:
         return None
+    # float() accepts 'nan', 'inf', 'infinity' and overflows like '1e400' -> inf; none is a real amount.
+    # Absurd magnitudes are rejected too so later sums can't overflow to inf.
+    return v if math.isfinite(v) and abs(v) < _MAX_AMOUNT else None
 
 
 # --------------------------------------------------------------------------- headers
@@ -281,7 +290,10 @@ def parse_csv(content: bytes) -> tuple[list[dict], dict]:
         dialect = csv.Sniffer().sniff(sample, delimiters=",;\t|")
     except csv.Error:
         dialect = csv.excel
-    rows = list(csv.reader(io.StringIO(text), dialect))
+    try:
+        rows = list(csv.reader(io.StringIO(text), dialect))
+    except csv.Error as e:  # e.g. a single cell over the csv module's field size limit
+        raise ParseError("This CSV couldn't be read: one of its cells is malformed or far too long.") from e
     cols = None
     header_idx = -1
     for i, row in enumerate(rows[:60]):
@@ -399,6 +411,8 @@ def _text_rows(lines: list[str]) -> list[dict]:
                     "credit": round(credit, 2), "balance": None if bal is None else round(bal, 2)})
         if bal is not None:
             prev_bal = bal
+        elif prev_bal is not None:  # no printed balance: keep the running total so the next row's direction is inferred correctly
+            prev_bal = round(prev_bal + credit - debit, 2)
     return out
 
 
@@ -411,34 +425,39 @@ def parse_pdf(content: bytes) -> tuple[list[dict], dict]:
         pdf = pdfplumber.open(io.BytesIO(content))
     except Exception as e:
         raise ParseError("This PDF could not be opened. It may be corrupted or password-protected.") from e
-    with pdf:
-        raw_meta = pdf.metadata or {}
-        pdf_metadata = {k: _pdf_str(raw_meta.get(k)) for k in _PDF_META_KEYS}
-        pdf_metadata["page_count"] = len(pdf.pages)
-        txns: list[dict] = []
-        cols: dict[str, int] | None = None
-        ncols = 0
-        first_text = (pdf.pages[0].extract_text() or "") if pdf.pages else ""
-        for page in pdf.pages:
-            for table in page.extract_tables():
-                for row in table:
-                    # wrapped cells: a break right after '/' was a mid-token wrap; otherwise it was a space
-                    cells = [re.sub(r"\s*\n\s*", " ", re.sub(r"/\n", "/", c)).strip() if isinstance(c, str) else ""
-                             for c in row]
-                    hdr = map_header(cells)
-                    if hdr:
-                        cols, ncols = hdr, len(cells)
-                        continue
-                    if cols and len(cells) == ncols:
-                        t = _row_to_txn(cells, cols)
-                        if t:
-                            txns.append(t)
-        source_mode = "table"
-        all_text = ""
-        if not txns:  # no ruled table: fall back to line-by-line text parsing
-            all_text = "\n".join((p.extract_text() or "") for p in pdf.pages)
-            txns = _text_rows(all_text.splitlines())
-            source_mode = "text"
+    try:
+        with pdf:
+            raw_meta = pdf.metadata or {}
+            pdf_metadata = {k: _pdf_str(raw_meta.get(k)) for k in _PDF_META_KEYS}
+            pdf_metadata["page_count"] = len(pdf.pages)
+            txns: list[dict] = []
+            cols: dict[str, int] | None = None
+            ncols = 0
+            first_text = (pdf.pages[0].extract_text() or "") if pdf.pages else ""
+            for page in pdf.pages:
+                for table in page.extract_tables():
+                    for row in table:
+                        # wrapped cells: a break right after '/' was a mid-token wrap; otherwise it was a space
+                        cells = [re.sub(r"\s*\n\s*", " ", re.sub(r"/\n", "/", c)).strip() if isinstance(c, str) else ""
+                                 for c in row]
+                        hdr = map_header(cells)
+                        if hdr:
+                            cols, ncols = hdr, len(cells)
+                            continue
+                        if cols and len(cells) == ncols:
+                            t = _row_to_txn(cells, cols)
+                            if t:
+                                txns.append(t)
+            source_mode = "table"
+            all_text = ""
+            if not txns:  # no ruled table: fall back to line-by-line text parsing
+                all_text = "\n".join((p.extract_text() or "") for p in pdf.pages)
+                txns = _text_rows(all_text.splitlines())
+                source_mode = "text"
+    except (ParseError, RecursionError):
+        raise
+    except Exception as e:  # pdfminer raises assorted errors on malformed page/content streams
+        raise ParseError("This PDF could not be read. It may be corrupted; try downloading it from your bank again.") from e
     if not txns and not all_text.strip():
         raise ParseError("This PDF has no selectable text (it looks like a scanned image). "
                          "Please upload the e-statement PDF downloaded from your bank, or a CSV export.")
@@ -501,13 +520,27 @@ def _find_key(obj, key: str):
     return None
 
 
+def _str_or_none(v) -> str | None:
+    """Scalar JSON value -> trimmed string; objects, lists, booleans and blanks -> None."""
+    if isinstance(v, str):
+        return v.strip() or None
+    if isinstance(v, (int, float)) and not isinstance(v, bool):
+        return str(v)
+    return None
+
+
 def parse_aa_json(content: bytes) -> tuple[list[dict], dict]:
     try:
         data = json.loads(_decode(content))
     except json.JSONDecodeError as e:
         raise ParseError(f"The JSON file is not valid (line {e.lineno}).") from e
+    except (ValueError, RecursionError) as e:  # e.g. integers over Python's digit limit, absurdly deep nesting
+        raise ParseError("The JSON file is not valid Account Aggregator data.") from e
     accounts: list = []
-    _find_accounts(data, accounts)
+    try:
+        _find_accounts(data, accounts)
+    except RecursionError as e:
+        raise ParseError("The JSON file is nested too deeply to be Account Aggregator data.") from e
     if not accounts:
         raise ParseError("This JSON doesn't look like Account Aggregator FI data (no Account.Transactions found).")
 
@@ -531,11 +564,11 @@ def parse_aa_json(content: bytes) -> tuple[list[dict], dict]:
             skipped += 1
             continue
         bal = parse_amount(_ci_get(t, "currentBalance", "balance"))
-        tid = _ci_get(t, "txnId", "reference")
+        tid = _str_or_none(_ci_get(t, "txnId", "reference"))
         txns.append({
-            "txn_id": str(tid) if tid not in (None, "") else None,
+            "txn_id": tid,
             "date": d,
-            "narration": re.sub(r"\s+", " ", str(_ci_get(t, "narration") or "")).strip(),
+            "narration": re.sub(r"\s+", " ", _str_or_none(_ci_get(t, "narration")) or "").strip(),
             "debit": round(abs(amt), 2) if kind == "DEBIT" else 0.0,
             "credit": round(abs(amt), 2) if kind == "CREDIT" else 0.0,
             "balance": None if bal is None else round(bal, 2),
@@ -544,19 +577,19 @@ def parse_aa_json(content: bytes) -> tuple[list[dict], dict]:
     profile = _ci_get(acc, "Profile") or {}
     holders = _ci_get(profile, "Holders") or {}
     holder = _as_list(_ci_get(holders, "Holder"))
-    holder_name = _ci_get(holder[0], "name") if holder and isinstance(holder[0], dict) else None
+    holder_name = _str_or_none(_ci_get(holder[0], "name")) if holder and isinstance(holder[0], dict) else None
     summary = _ci_get(acc, "Summary") or {}
-    ifsc = str(_ci_get(summary, "ifscCode") or "")
+    ifsc = _str_or_none(_ci_get(summary, "ifscCode")) or ""
     bank = _IFSC_BANKS.get(ifsc[:4].upper()) if ifsc else None
     fip = _find_key(data, "fipName") or _find_key(data, "fipId") or _find_key(data, "fipID")
     if not bank and fip:
-        bank = str(fip)
+        bank = _str_or_none(fip)
     meta = {
         "source": "aa_json",
         "account_holder": holder_name,
         "bank": bank,
-        "account_number": _ci_get(acc, "maskedAccNumber"),
-        "account_type": _ci_get(summary, "type"),
+        "account_number": _str_or_none(_ci_get(acc, "maskedAccNumber")),
+        "account_type": _str_or_none(_ci_get(summary, "type")),
         "accounts_found": len(accounts),
         "skipped_rows": skipped,
     }
@@ -566,15 +599,21 @@ def parse_aa_json(content: bytes) -> tuple[list[dict], dict]:
 # --------------------------------------------------------------------------- entry point
 
 def parse_upload(filename: str, content: bytes) -> tuple[list[dict], dict]:
-    """Detect the format from content (falling back to extension) and parse it."""
+    """Detect the format from content (falling back to extension) and parse it.
+
+    Every malformed-input failure surfaces as ParseError (HTTP 400), never as a server error.
+    """
     if not content or not content.strip():
         raise ParseError("The uploaded file is empty.")
     name = (filename or "").lower()
     head = content.lstrip()[:8]
-    if head.startswith(b"%PDF") or name.endswith(".pdf"):
-        return parse_pdf(content)
-    if head[:1] in (b"{", b"[") or name.endswith(".json"):
-        return parse_aa_json(content)
-    if name.endswith((".xls", ".xlsx")) or head.startswith(b"PK"):
-        raise ParseError("Excel files aren't supported yet. Please export the statement as CSV or PDF.")
-    return parse_csv(content)
+    try:
+        if head.startswith(b"%PDF") or name.endswith(".pdf"):
+            return parse_pdf(content)
+        if head[:1] in (b"{", b"[") or name.endswith(".json"):
+            return parse_aa_json(content)
+        if name.endswith((".xls", ".xlsx")) or head.startswith(b"PK"):
+            raise ParseError("Excel files aren't supported yet. Please export the statement as CSV or PDF.")
+        return parse_csv(content)
+    except RecursionError as e:  # pathologically nested JSON/PDF objects
+        raise ParseError("This file is nested too deeply to be a bank statement.") from e

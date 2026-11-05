@@ -36,7 +36,6 @@ export function LenderConsole() {
 
   useEffect(() => {
     let cancelled = false;
-    setError(null);
     getPortfolio()
       .then((d) => !cancelled && setData(d))
       .catch((e: Error) => !cancelled && setError(e.message));
@@ -47,18 +46,7 @@ export function LenderConsole() {
 
   const apps = useMemo(() => data?.applicants ?? [], [data]);
 
-  const kpis = useMemo(() => {
-    const n = apps.length || 1;
-    return {
-      total: apps.length,
-      approval: apps.filter((a) => a.decision === "approve").length / n,
-      review: apps.filter((a) => a.decision === "review").length,
-      flagged: apps.filter((a) => a.integrity_status !== "pass").length,
-      failed: apps.filter((a) => a.integrity_status === "fail").length,
-      avgScore: apps.reduce((s, a) => s + a.score, 0) / n,
-      avgPd: apps.reduce((s, a) => s + a.pd, 0) / n,
-    };
-  }, [apps]);
+  const kpis = data?.summary;
 
   const histogram = useMemo(
     () =>
@@ -105,6 +93,7 @@ export function LenderConsole() {
               variant="secondary"
               onClick={() => {
                 setData(null);
+                setError(null);
                 setAttempt((a) => a + 1);
               }}
             >
@@ -121,7 +110,16 @@ export function LenderConsole() {
       />
 
       {error ? (
-        <ErrorState title="Couldn’t load the portfolio" message={error} action={<Button onClick={() => setAttempt((a) => a + 1)}>Try again</Button>} />
+        <ErrorState title="Couldn’t load the portfolio" message={error} action={
+            <Button
+              onClick={() => {
+                setError(null);
+                setAttempt((a) => a + 1);
+              }}
+            >
+              Try again
+            </Button>
+          } />
       ) : !data ? (
         <div className="space-y-[18px]" aria-busy="true" aria-label="Loading portfolio">
           <Skeleton className="h-[104px]" />
@@ -130,14 +128,20 @@ export function LenderConsole() {
         </div>
       ) : (
         <>
-          <StatStrip
-            items={[
-              { label: "Applicants", value: String(kpis.total), hint: `${kpis.review} need manual review` },
-              { label: "Approval rate", value: pct(kpis.approval), hint: "Approved without review" },
-              { label: "Flagged statements", value: String(kpis.flagged), hint: `${kpis.failed} failed authenticity checks` },
-              { label: "Average score", value: Math.round(kpis.avgScore).toString(), hint: `Mean default probability ${pct(kpis.avgPd, 1)}` },
-            ]}
-          />
+          {kpis && (
+            <StatStrip
+              items={[
+                { label: "Applicants", value: String(kpis.applicants), hint: `${kpis.decisions.review} need manual review` },
+                { label: "Approval rate", value: pct(kpis.approval_rate), hint: "Approved without review" },
+                { label: "Failed statements", value: String(kpis.integrity_flagged), hint: "Failed authenticity checks" },
+                {
+                  label: "Average score",
+                  value: kpis.avg_score != null ? String(kpis.avg_score) : "—",
+                  hint: kpis.avg_pd != null ? `Mean default probability ${pct(kpis.avg_pd, 1)}` : "No scored applicants",
+                },
+              ]}
+            />
+          )}
 
           <div className="mt-[18px] grid gap-[18px] lg:grid-cols-[1fr_360px]">
             <div className="card p-5 sm:p-6">
@@ -236,7 +240,7 @@ export function LenderConsole() {
             <div className="card overflow-hidden">
               <div className="max-h-[calc(100vh-140px)] overflow-auto">
                 <table className="data-table hoverable text-sm">
-                  <caption className="sr-only">Applicants. Select a row for a summary, or a name to open the full report.</caption>
+                  <caption className="sr-only">Applicants. Use a row&apos;s Summary button for a quick view, or the name to open the full report.</caption>
                   <thead>
                     <tr>
                       {COLS.map((c) => {
@@ -274,10 +278,21 @@ export function LenderConsole() {
                         <tr key={a.id} onClick={() => setOpenId(a.id)}>
                           <td>
                             <div className="row-name">
-                              <Link href={reportHref(a.id)} onClick={(e) => e.stopPropagation()} className="hover:text-accent hover:underline">
+                              <Link href={reportHref(a.id)} onClick={(e) => e.stopPropagation()} className="rounded-[4px] hover:text-accent hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
                                 {a.name}
                               </Link>
                               {a.tampered && <Badge tone="caution">Edited</Badge>}
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenId(a.id);
+                                }}
+                                aria-label={`Summary for ${a.name}`}
+                                className="link-btn ml-auto text-[12px]! rounded-[4px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                              >
+                                Summary
+                              </button>
                             </div>
                             <div className="row-sub">
                               {personaLabel(a.persona)}
@@ -302,8 +317,13 @@ export function LenderConsole() {
                             <StatusDot tone={statusTone(a.integrity_status)}>{STATUS_LABEL[a.integrity_status]}</StatusDot>
                           </td>
                           <td className="num whitespace-nowrap max-lg:hidden">
-                            <span className={`big-num ${over ? "text-negative!" : ""}`}>{inr(a.requested_emi)}</span>
-                            <span className="sub-num">of {inr(a.max_emi)} affordable</span>
+                            <span className={`big-num ${over ? "text-negative!" : ""}`}>
+                              {over && <span aria-hidden="true">▲ </span>}
+                              {inr(a.requested_emi)}
+                            </span>
+                            <span className="sub-num">
+                              of {inr(a.max_emi)} affordable{over && " · over limit"}
+                            </span>
                           </td>
                         </tr>
                       );
@@ -314,7 +334,7 @@ export function LenderConsole() {
               </div>
             </div>
             <p className="foot mt-4">
-              {apps.length} applicants · Select a row for a summary, or a name to open the full report · Press / to search
+              {apps.length} applicants · Select a row or its Summary button for a quick view, or a name to open the full report · Press / to search
             </p>
           </section>
         </>

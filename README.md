@@ -50,51 +50,64 @@ flowchart LR
 
 **1. No public data exists** for Indian bank statements with repayment outcomes. We built a persona-based simulator (`ml/simulator.py`): salaried, gig workers, shopkeepers, farmers, students and homemakers with bank-specific narration formats (SBI, HDFC, ICICI, Axis, Kotak, Canara, BoB, PNB), truncation and typos. Hidden traits (money discipline, repayment priority, income-shock risk, liquidity stress, betting and loan-app propensity) drive what appears in the statement. **Default is simulated over a separate future 12-month window from hidden traits plus fresh shocks and noise**, so the model has to infer risk, not read it off a column.
 
-**2. Narration understanding.** Char 3–5-gram + word TF-IDF → multinomial logistic regression over 27 categories. Evaluated on **merchants never seen in training** (25% of merchants per category held out) to measure generalisation, not memorisation.
+**2. Narration understanding.** Char 3–5-gram + word TF-IDF → multinomial logistic regression over 27 categories. Evaluated on **merchants never seen in training**: about 25% of the merchants in each category are held out entirely (33,115 test narrations, 33% of rows), to measure generalisation, not memorisation.
 
-**3. Fraud-resistant input.** Every statement goes through authenticity checks before scoring: running-balance continuity (catches edited amounts), duplicate transaction IDs, date gaps, PDF metadata (edited after creation, known PDF-editor producers), **round-tripping** (credit from a counterparty returned within 72 h — fake income is excluded), salary consistency and statement length. A failed check blocks auto-approval and shows the evidence rows.
+**3. Fraud-resistant input.** Every statement goes through authenticity checks before scoring: running-balance continuity (catches edited amounts; rows without a printed balance are carried forward, not flagged), duplicate transaction IDs, date gaps, salary consistency, statement length, PDF metadata and **round-tripping** (credits returned to the same counterparty within 72 h). Round-tripping fails when returned credits are ≥10% of money in across ≥2 pairs, or a single return is ≥25%; smaller back-and-forth between friends is only a warning, and returned credits never count as income. PDF-editor traces alone (e.g. re-saved in iLovePDF to remove a password) are a warning; they fail only when the balance or salary checks corroborate tampering. A failed check blocks auto-approval and shows the evidence rows.
 
-**4. Explainability by construction.** The deployed model is a sign-constrained standardized logistic scorecard: every decision decomposes exactly into per-feature contributions, which become reason codes and drive the counterfactual "how to improve" search. Features whose fitted effect contradicted domain logic were dropped so no reason code is ever nonsensical.
+**4. Explainability by construction.** The deployed model is a **sign-constrained L2 logistic scorecard**: every coefficient is constrained to the direction lending logic expects (or exactly zero) and fit by L-BFGS-B on standardized features, so collinearity can never produce a reversed reason code. Scaling and selection are refit inside each CV fold. Every decision decomposes exactly into per-feature contributions, which become reason codes and drive the counterfactual "how to improve" search.
 
-**5. Serverless, private, numpy-only runtime.** Training uses scikit-learn; models are exported to JSON and re-implemented in numpy for inference, with parity asserted at train time (categorizer max diff 5.9e-6, scorecard 4.0e-8). Nothing is stored server-side.
+**5. Policy guardrails.** Statements covering under 90 days or with fewer than 30 transactions are never auto-approved (amount capped at ₹25,000); statements with under ₹1,000 a month of regular income are outside the training population and declined; failed authenticity checks block auto-approval. Approve/review cut-offs are fixed PD limits (approve ≤ 11%, review ≤ 22%) set as policy, not tuned on outcomes.
+
+**6. Serverless, private, numpy-only runtime.** Training uses scikit-learn and SciPy; models are exported to JSON and re-implemented in numpy for inference, with parity asserted at train time (categorizer max diff 5.9e-6, scorecard 3.5e-8). Nothing is stored server-side.
 
 ## Results
 
-All risk metrics are 5-fold stratified CV, out-of-fold, on 6,000 simulated applicants (2,852,088 transactions, 20.2% default rate).
+All risk metrics are 5-fold stratified CV, out-of-fold, on 6,000 simulated applicants (2,852,088 transactions, 19.9% default rate). All three risk models use the same 17 candidate features and the same folds.
 
 **Transaction categorizer**
 
 | Evaluation | Accuracy | Macro-F1 |
 |---|---|---|
-| Unseen merchants (held-out 25% per category) | **0.860** | 0.797 |
+| Unseen merchants (~25% of merchants per category held out) | **0.860** | 0.797 |
 | Same-population statements | 0.988 | — |
 
 **Risk model**
 
 | Model | ROC-AUC | KS | Gini | Brier |
 |---|---|---|---|---|
-| Logistic scorecard (**deployed**, explainable) | **0.719** | 0.329 | 0.439 | 0.146 |
-| WoE-binned scorecard | 0.728 | 0.349 | 0.455 | 0.143 |
-| HistGradientBoosting | 0.717 | 0.328 | 0.434 | 0.146 |
+| Sign-constrained logistic scorecard (**deployed**, explainable) | **0.718** | 0.334 | 0.436 | 0.146 |
+| WoE-binned scorecard | 0.726 | 0.343 | 0.452 | 0.142 |
+| HistGradientBoosting | 0.723 | 0.354 | 0.446 | 0.144 |
+
+The deployed scorecard gives up 0.005–0.008 AUC against the black-box benchmarks in exchange for exact, never-reversed reason codes.
 
 **Ablations — what cash flow adds**
 
-| Feature set | ROC-AUC |
-|---|---|
-| Bureau-like (has existing EMI + any bounce) | 0.614 |
-| Income only (level, variability, regularity) | 0.545 |
-| Cash flow without balance features | 0.711 |
-| Full cash-flow scorecard | **0.719** |
+| Feature set | Features | ROC-AUC |
+|---|---|---|
+| Bureau-like (has existing EMI + any bounce) | 2 | 0.609 |
+| Income only (level, variability, regularity, sources) | 4 | 0.558 |
+| Cash flow without balance features | 14 | 0.714 |
+| Full cash-flow candidate set (deployed) | 17 | **0.718** |
 
-**Score bands are monotonic** — observed default rate A 6.3% → B 7.2% → C 13.4% → D 24.3% → E 44.6%. Policy: 23.7% auto-approved (7.0% default), 33.5% declined (35.6% default), the rest routed to review.
+**Score bands are monotonic** — observed default rate A 3.7% → B 7.1% → C 13.1% → D 25.5% → E 44.1%. Policy: 21.6% auto-approved (6.6% default), 31.9% declined (35.4% default), the rest routed to review.
 
-**By persona** (AUC): gig worker 0.745, student 0.736, salaried 0.732, homemaker 0.709, shopkeeper 0.708, farmer 0.649.
+**By persona** (AUC): gig worker 0.747, salaried 0.726, homemaker 0.720, student 0.720, shopkeeper 0.697, farmer 0.650.
 
-**Top drivers:** savings buffer (months of income), bill-payment regularity, share of income already going to EMIs (FOIR), savings rate, instant-loan-app use, bounced payments, income variability.
+**Top drivers:** bill-payment regularity, savings rate, share of income already going to EMIs (FOIR), instant-loan-app use, bounced payments, balance left before income arrives, betting spend. In the simulated population, income level adds little once repayment behaviour is known; income mainly sets how much can be lent (EMI capped at a share of income).
 
-**Fairness.** Gender is never a model input; it is simulated only to audit outcomes. Approval rate female 25.4% vs male 22.9%; approval among those who repaid 28.6% vs 27.1%.
+**Fairness.** Gender is never a model input; it is simulated only to audit outcomes. Approval rate female 22.8% vs male 21.0%; approval among those who repaid 25.7% vs 25.0%.
 
-**External validation on real data.** On the real Statlog German Credit dataset (1,000 applicants, `ml/validate_german_credit.py`), non-bureau features alone reach AUC 0.751 vs 0.625 for bureau features alone; on thin-file applicants the bureau-only model is worse than random (0.338) while alternative data reaches 0.682.
+**External validation on real data.** On the real Statlog German Credit dataset (1,000 applicants, `ml/validate_german_credit.py`), non-bureau features alone reach AUC 0.751 vs 0.625 for bureau features alone. On the 89 applicants with no or fully-paid prior credit, alternative data reaches 0.682 while bureau features carry no usable signal (0.338). Caveats: that subset is defined by a bureau field, so the bureau model is nearly constant inside it, and n is small — treat it as directional.
+
+## Tests
+
+```bash
+.venv/bin/python -m pytest      # 107 tests: parsers, authenticity checks, scoring invariants, API
+npm run lint && npm run typecheck && npm run build
+```
+
+Tests cover every sample format parsing identically, genuine statements passing and tampered ones failing with evidence, a single edited amount breaking balance continuity, reason codes summing exactly to the model logit, improvements raising the score, affordability caps, runtime never importing training libraries, and readable 400s for bad input. GitHub Actions runs the Python and web checks on every push (`.github/workflows/ci.yml`).
 
 ## Tech stack
 

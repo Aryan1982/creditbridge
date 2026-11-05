@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { currentTheme, setTheme, type Theme } from "@/lib/theme";
 import { Logo } from "./logo";
 
@@ -41,15 +41,14 @@ export function SiteHeader() {
   );
 }
 
-function ThemeToggle() {
-  const [theme, setLocal] = useState<Theme | null>(null);
+function subscribeTheme(onChange: () => void) {
+  window.addEventListener("themechange", onChange);
+  return () => window.removeEventListener("themechange", onChange);
+}
 
-  useEffect(() => {
-    setLocal(currentTheme());
-    const on = (e: Event) => setLocal((e as CustomEvent<Theme>).detail);
-    window.addEventListener("themechange", on);
-    return () => window.removeEventListener("themechange", on);
-  }, []);
+function ThemeToggle() {
+  // null on the server: the theme is only known once the inline theme script has run.
+  const theme = useSyncExternalStore<Theme | null>(subscribeTheme, currentTheme, () => null);
 
   const dark = theme === "dark";
   return (

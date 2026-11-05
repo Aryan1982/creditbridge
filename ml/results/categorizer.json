@@ -2,7 +2,7 @@
  "model": "char 3-5gram + word TF-IDF (sublinear, l2) \u2192 multinomial logistic regression",
  "accuracy": 0.8598,
  "macro_f1": 0.7965,
- "eval": "held-out unseen merchants/counterparties (25% of merchants per category never seen in training)",
+ "eval": "held-out unseen merchants/counterparties: about 25% of the merchants in each category are never seen in training (a merchant held out in one category is held out everywhere), giving a test set of 33,115 narrations, 33% of all rows",
  "n_train": 68469,
  "n_test": 33115,
  "n_features": 12000,

@@ -25,7 +25,10 @@ export interface EvidenceRow {
 
 export interface IntegrityCheck {
   id: string;
+  /** Phrased as the passing condition. */
   label: string;
+  /** Phrased as the failure; shown when status is warn or fail. */
+  problem?: string | null;
   status: Status;
   detail: string;
   critical?: boolean;
@@ -168,7 +171,21 @@ export interface PortfolioApplicant {
 
 export interface Portfolio {
   applicants: PortfolioApplicant[];
-  summary: Record<string, unknown>;
+  summary: PortfolioSummary;
+}
+
+/** Server-computed portfolio KPIs (api/index.py `portfolio`). */
+export interface PortfolioSummary {
+  applicants: number;
+  decisions: Record<Decision, number>;
+  approval_rate: number;
+  avg_score: number | null;
+  avg_pd: number | null;
+  /** Applicants whose statement failed integrity. */
+  integrity_flagged: number;
+  requested_total: number;
+  approved_total: number;
+  expected_loss_approved: number;
 }
 
 export interface ModelCard {

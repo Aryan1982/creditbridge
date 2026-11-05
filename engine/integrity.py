@@ -5,19 +5,26 @@ check_integrity(transactions, meta) -> Report.integrity:
      "checks": [{"id", "label", "problem", "status", "detail", "critical",
                  "evidence": [{"date", "narration", "amount", "note"}]}],
      "txn_flags": [[flag, ...] per input transaction]}   # popped by the API before responding
-`label` is phrased as the passing condition, `problem` as the failure. Evidence "amount" is signed: +credit, -debit.
+`label` is phrased as the passing condition. `problem` is a sentence-case headline for the warn/fail state
+(null when the check passes). Evidence "amount" is signed: +credit, -debit.
+failed_problems(integrity) -> lowercase phrases of the failed checks, for use mid-sentence in summaries.
 """
 from __future__ import annotations
 
 import re
 from collections import Counter, defaultdict
-from datetime import date, datetime
+from datetime import datetime
 
-__all__ = ["check_integrity"]
+from .text import inr, months_between, to_date
+
+__all__ = ["check_integrity", "failed_problems"]
 
 BALANCE_TOLERANCE = 1.0          # ₹
 ROUND_TRIP_WINDOW_DAYS = 3       # 72 hours (statements carry dates, not times)
 ROUND_TRIP_MIN_AMOUNT = 1000.0
+ROUND_TRIP_FAIL_PAIRS = 2              # fail needs a pattern, not one repayment...
+ROUND_TRIP_FAIL_SHARE = 0.10           # ...that is a meaningful share of all money in
+ROUND_TRIP_FAIL_SHARE_SINGLE = 0.25    # or one return so large it distorts income by itself
 MAX_EVIDENCE = 12
 
 # Producers/creators of consumer PDF editors and office tools. Bank e-statements are produced by
@@ -51,10 +58,6 @@ _KNOWN_BANK_CODES = {
 
 # --------------------------------------------------------------------------- helpers
 
-def _d(s: str) -> date:
-    return datetime.strptime(s, "%Y-%m-%d").date()
-
-
 def _amount(t: dict) -> float:
     return round(float(t.get("credit") or 0) - float(t.get("debit") or 0), 2)
 
@@ -64,22 +67,6 @@ def _ev(t: dict, note: str | None = None) -> dict:
     if note:
         e["note"] = note
     return e
-
-
-def _inr(x: float) -> str:
-    """Indian digit grouping: 123456.5 -> ₹1,23,456."""
-    neg = x < 0
-    s = str(int(round(abs(x))))
-    if len(s) > 3:
-        head, tail = s[:-3], s[-3:]
-        groups = []
-        while len(head) > 2:
-            groups.insert(0, head[-2:])
-            head = head[:-2]
-        if head:
-            groups.insert(0, head)
-        s = ",".join(groups + [tail])
-    return ("-₹" if neg else "₹") + s
 
 
 def counterparty(narration: str) -> str | None:
@@ -117,33 +104,35 @@ def _month_key(s: str) -> str:
     return s[:7]
 
 
-def _months_between(a: str, b: str) -> list[str]:
-    y, m = int(a[:4]), int(a[5:7])
-    ey, em = int(b[:4]), int(b[5:7])
-    out = []
-    while (y, m) <= (ey, em):
-        out.append(f"{y:04d}-{m:02d}")
-        m += 1
-        if m == 13:
-            y, m = y + 1, 1
-    return out
-
-
-# Failure-phrased name of each check, for summaries ("the statement failed checks: running balance doesn't add up").
+# Per check: (fail phrase, warn phrase), lowercase for use mid-sentence
+# ("the statement failed authenticity checks: running balance doesn't add up").
 _PROBLEMS = {
-    "balance_continuity": "running balance doesn't add up",
-    "duplicate_txn_ids": "repeated transactions",
-    "date_order_and_gaps": "missing or out-of-order dates",
-    "pdf_metadata": "the PDF was edited after the bank issued it",
-    "round_tripping": "money sent straight back to the payer to inflate income",
-    "salary_consistency": "salary amounts look altered",
-    "statement_period": "statement period is too short",
+    "balance_continuity": ("running balance doesn't add up", "running balance can't be verified"),
+    "duplicate_txn_ids": ("repeated transactions", "possible repeated transactions"),
+    "date_order_and_gaps": ("missing or out-of-order dates", "a gap or out-of-order dates"),
+    "pdf_metadata": ("the PDF was edited after the bank issued it", "the PDF was re-saved after the bank issued it"),
+    "round_tripping": ("money sent straight back to the payer to inflate income",
+                       "some money was sent straight back to the payer"),
+    "salary_consistency": ("salary amounts look altered", "some salary credits look unusual"),
+    "statement_period": ("statement period is too short", "statement is shorter than 6 months"),
 }
 
 
+def _problem(cid: str, status: str) -> str | None:
+    if status == "pass":
+        return None
+    s = _PROBLEMS[cid][0 if status == "fail" else 1]
+    return s[0].upper() + s[1:]
+
+
 def _check(cid: str, label: str, status: str, detail: str, critical: bool, evidence=None) -> dict:
-    return {"id": cid, "label": label, "problem": _PROBLEMS[cid], "status": status, "detail": detail,
+    return {"id": cid, "label": label, "problem": _problem(cid, status), "status": status, "detail": detail,
             "critical": critical, "evidence": (evidence or [])[:MAX_EVIDENCE]}
+
+
+def failed_problems(integrity: dict) -> list[str]:
+    """Lowercase failure phrases of every failed check, for summaries."""
+    return [_PROBLEMS[c["id"]][0] for c in integrity.get("checks", []) if c["status"] == "fail"]
 
 
 # --------------------------------------------------------------------------- checks
@@ -151,19 +140,23 @@ def _check(cid: str, label: str, status: str, detail: str, critical: bool, evide
 def _balance_continuity(txns: list[dict], flags: list[list[str]]) -> tuple[dict, set[int]]:
     label = "Running balance is consistent"
     pairs = 0
+    unprinted = 0  # rows with no printed balance; their amounts are carried into the next check
     bad: list[int] = []
-    prev_bal = None
+    running = None  # last printed balance plus the net of any balance-less rows since
     for i, t in enumerate(txns):
         bal = t.get("balance")
         if bal is None:
+            if running is not None:
+                running = round(running + _amount(t), 2)
+                unprinted += 1
             continue
-        if prev_bal is not None:
+        if running is not None:
             pairs += 1
-            expected = round(prev_bal - float(t.get("debit") or 0) + float(t.get("credit") or 0), 2)
+            expected = round(running + _amount(t), 2)
             if abs(expected - bal) > BALANCE_TOLERANCE:
                 bad.append(i)
                 t["_expected_balance"] = expected
-        prev_bal = bal
+        running = bal
     if pairs == 0:
         return _check("balance_continuity", label, "warn",
                       "This statement has no running balance column, so the arithmetic can't be verified.",
@@ -172,14 +165,15 @@ def _balance_continuity(txns: list[dict], flags: list[list[str]]) -> tuple[dict,
     for i in bad:
         t = txns[i]
         flags[i].append("balance_mismatch")
-        evidence.append(_ev(t, f"Balance shown {_inr(t['balance'])}, but previous balance "
-                               f"{'+' if _amount(t) >= 0 else '−'} amount = {_inr(t.pop('_expected_balance'))}"))
+        evidence.append(_ev(t, f"Balance shown {inr(t['balance'])}, but previous balance "
+                               f"{'+' if _amount(t) >= 0 else '−'} amount = {inr(t.pop('_expected_balance'))}"))
+    gaps = f" ({unprinted} row(s) without a printed balance were carried forward)" if unprinted else ""
     if bad:
         return _check("balance_continuity", label, "fail",
-                      f"{len(bad)} of {pairs} rows don't add up: previous balance ± amount ≠ the balance printed. "
+                      f"{len(bad)} of {pairs} rows don't add up: previous balance ± amount ≠ the balance printed{gaps}. "
                       "Amounts or balances were likely altered.", True, evidence), set(bad)
     return _check("balance_continuity", label, "pass",
-                  f"All {pairs} rows add up to the printed running balance (±₹1).", True), set()
+                  f"All {pairs} rows add up to the printed running balance (±₹1){gaps}.", True), set()
 
 
 def _duplicates(txns: list[dict], flags: list[list[str]]) -> dict:
@@ -221,11 +215,11 @@ def _date_order_and_gaps(txns: list[dict]) -> dict:
     out_of_order = [i for i in range(1, len(txns)) if txns[i]["date"] < txns[i - 1]["date"]]
     dates = sorted({t["date"] for t in txns})
     months_present = {_month_key(d) for d in dates}
-    all_months = _months_between(dates[0], dates[-1])
+    all_months = months_between(dates[0], dates[-1])
     missing = [m for m in all_months if m not in months_present]
     longest, gap_from, gap_to = 0, None, None
     for a, b in zip(dates, dates[1:]):
-        g = (_d(b) - _d(a)).days
+        g = (to_date(b) - to_date(a)).days
         if g > longest:
             longest, gap_from, gap_to = g, a, b
     ev = [_ev(txns[i], f"Dated before the previous row ({txns[i - 1]['date']})") for i in out_of_order]
@@ -261,7 +255,10 @@ def _parse_pdf_iso(s: str | None) -> datetime | None:
         return None
 
 
-def _pdf_metadata(meta: dict) -> dict | None:
+def _pdf_metadata(meta: dict, corroborated_by: list[str]) -> dict | None:
+    """Editor/ModDate traces alone are only a warning: people routinely strip statement passwords with
+    iLovePDF, Acrobat or Smallpdf. They become a critical fail when a content check (running balance,
+    salary) also failed, i.e. the edit changed the figures. `corroborated_by` names those failed checks."""
     if meta.get("source") != "pdf":
         return None
     label = "PDF file hasn't been edited"
@@ -276,10 +273,9 @@ def _pdf_metadata(meta: dict) -> dict | None:
             when = _parse_pdf_iso(md[k]) if k.endswith("Date") else None
             shown = when.strftime("%d %b %Y %H:%M") if when else md[k]
             ev.append({"date": when.date().isoformat() if when else "", "narration": f"{k}: {shown}", "amount": 0})
-    issues, fail = [], False
+    issues = []
     tools = {name for pat, name in _EDITOR_PATTERNS if pat in producer.lower() or pat in creator.lower()}
     if tools:
-        fail = True
         issues.append(f"the file was last saved by {', '.join(sorted(tools))}, a PDF/document editor — "
                       "bank e-statements are generated by the bank's own system")
     if created and modified:
@@ -288,25 +284,33 @@ def _pdf_metadata(meta: dict) -> dict | None:
         except TypeError:  # naive vs aware
             delta = (modified.replace(tzinfo=None) - created.replace(tzinfo=None)).total_seconds()
         if delta > 60:
-            fail = True
             hrs = delta / 3600
             when = f"{hrs / 24:.0f} days" if hrs >= 48 else f"{hrs:.1f} hours"
             issues.append(f"it was modified {when} after the bank created it")
     elif md.get("ModDate") and md.get("CreationDate") and md.get("ModDate") != md.get("CreationDate"):
-        fail = True
         issues.append("its modification date differs from its creation date")
     if not producer and not creator and not md.get("CreationDate"):
         return _check("pdf_metadata", label, "warn",
                       "The PDF has no producer or creation-date information; it may have been re-saved or scrubbed.",
                       True, ev)
-    if fail:
-        return _check("pdf_metadata", label, "fail", "The PDF shows signs of editing: " + "; ".join(issues) + ".",
-                      True, ev)
+    if issues and corroborated_by:
+        return _check("pdf_metadata", label, "fail",
+                      "The PDF shows signs of editing: " + "; ".join(issues) + "; and the "
+                      + " and the ".join(corroborated_by) + ", so the edit changed the figures.", True, ev)
+    if issues:
+        return _check("pdf_metadata", label, "warn",
+                      "The PDF was re-saved after the bank issued it: " + "; ".join(issues) + ". This often happens "
+                      "when a statement password is removed; the figures themselves check out, so this alone isn't "
+                      "treated as tampering.", True, ev)
     return _check("pdf_metadata", label, "pass",
                   f"Produced by '{producer or creator}', never modified after creation.", True, ev)
 
 
 def _round_tripping(txns: list[dict], flags: list[list[str]]) -> dict:
+    """Credits sent back to the same counterparty within 72 h. A few friend-to-friend repayments (bill splits,
+    short loans) are normal, so this is only a critical fail when the matched credits are a meaningful share of
+    money in: >= ROUND_TRIP_FAIL_SHARE over >= ROUND_TRIP_FAIL_PAIRS pairs, or one return big enough
+    (>= ROUND_TRIP_FAIL_SHARE_SINGLE) to distort income by itself. Matched credits never count as income."""
     label = "No money going in and straight back out"
     total_credit = sum(float(t.get("credit") or 0) for t in txns) or 1.0
     parties = [counterparty(t.get("narration", "")) for t in txns]
@@ -316,10 +320,10 @@ def _round_tripping(txns: list[dict], flags: list[list[str]]) -> dict:
         c = float(t.get("credit") or 0)
         if c < ROUND_TRIP_MIN_AMOUNT or not parties[i] or _REVERSAL_RE.search(t.get("narration", "")):
             continue
-        di = _d(t["date"])
+        di = to_date(t["date"])
         for j in range(i + 1, len(txns)):
             u = txns[j]
-            gap = (_d(u["date"]) - di).days
+            gap = (to_date(u["date"]) - di).days
             if gap > ROUND_TRIP_WINDOW_DAYS:
                 break
             dbt = float(u.get("debit") or 0)
@@ -338,14 +342,19 @@ def _round_tripping(txns: list[dict], flags: list[list[str]]) -> dict:
     for i, j in pairs:
         flags[i].append("round_trip")
         flags[j].append("round_trip")
-        hrs = (_d(txns[j]["date"]) - _d(txns[i]["date"])).days * 24
+        hrs = (to_date(txns[j]["date"]) - to_date(txns[i]["date"])).days * 24
         ev.append(_ev(txns[i], "Money in"))
         ev.append(_ev(txns[j], f"Same amount sent back to the same person within {hrs or '<24'} hours"))
-    status = "fail" if (len(pairs) >= 2 or share >= 0.10) else "warn"
-    return _check("round_tripping", label, status,
-                  f"{len(pairs)} credit(s) totalling {_inr(inflated)} ({share:.0%} of all money in) were returned to "
-                  "the sender within 72 hours. This inflates apparent income; these amounts shouldn't count as income.",
-                  True, ev)
+    fail = (len(pairs) >= ROUND_TRIP_FAIL_PAIRS and share >= ROUND_TRIP_FAIL_SHARE) \
+        or share >= ROUND_TRIP_FAIL_SHARE_SINGLE
+    found = (f"{len(pairs)} credit(s) totalling {inr(inflated)} ({share:.0%} of all money in) were returned to "
+             "the sender within 72 hours.")
+    if fail:
+        return _check("round_tripping", label, "fail",
+                      found + " This inflates apparent income; these amounts shouldn't count as income.", True, ev)
+    return _check("round_tripping", label, "warn",
+                  found + " That's a small share, typical of splitting bills or short repayments between friends, "
+                  "so it isn't treated as fraud; these amounts aren't counted as income.", True, ev)
 
 
 def _salary_consistency(txns: list[dict], bad_rows: set[int], flags: list[list[str]]) -> dict:
@@ -366,12 +375,13 @@ def _salary_consistency(txns: list[dict], bad_rows: set[int], flags: list[list[s
     day_med = sorted(days)[len(days) // 2]
     off_day = [i for i in sal if min(abs(int(txns[i]["date"][8:10]) - day_med),
                                      31 - abs(int(txns[i]["date"][8:10]) - day_med)) > 7]
-    close = [j for k, j in enumerate(sal[1:], 1) if (_d(txns[j]["date"]) - _d(txns[sal[k - 1]]["date"])).days < 20]
+    close = [j for k, j in enumerate(sal[1:], 1)
+             if (to_date(txns[j]["date"]) - to_date(txns[sal[k - 1]]["date"])).days < 20]
     ev = []
     for i in high + low:
         if i in high:
             flags[i].append("salary_outlier")
-        ev.append(_ev(txns[i], f"{abs(dev[i]):.0%} {'above' if dev[i] > 0 else 'below'} the usual salary of {_inr(median)}"))
+        ev.append(_ev(txns[i], f"{abs(dev[i]):.0%} {'above' if dev[i] > 0 else 'below'} the usual salary of {inr(median)}"))
     for i in off_day:
         if i not in high and i not in low:
             ev.append(_ev(txns[i], f"Paid on day {txns[i]['date'][8:10]}; usually around day {day_med}"))
@@ -379,9 +389,9 @@ def _salary_consistency(txns: list[dict], bad_rows: set[int], flags: list[list[s
         ev.append(_ev(txns[j], "Second salary credit within 20 days"))
     problems = []
     if high:
-        problems.append(f"{len(high)} salary credit(s) are more than 25% above the usual {_inr(median)}")
+        problems.append(f"{len(high)} salary credit(s) are more than 25% above the usual {inr(median)}")
     if len(low) >= 3:
-        problems.append(f"{len(low)} salary credit(s) are more than 25% below the usual {_inr(median)}")
+        problems.append(f"{len(low)} salary credit(s) are more than 25% below the usual {inr(median)}")
     if len(off_day) > max(1, len(sal) // 4):
         problems.append(f"{len(off_day)} salary credit(s) arrive on unusual dates")
     if close:
@@ -389,7 +399,7 @@ def _salary_consistency(txns: list[dict], bad_rows: set[int], flags: list[list[s
     if not problems:
         note = f" {len(low)} month(s) paid less than usual, which is common (leave or a partial month)." if low else ""
         return _check("salary_consistency", label, "pass",
-                      f"{len(sal)} salary credits of about {_inr(median)}, paid around day {day_med} each month.{note}",
+                      f"{len(sal)} salary credits of about {inr(median)}, paid around day {day_med} each month.{note}",
                       False, ev)
     edited = any(i in bad_rows for i in high)
     status = "fail" if edited or len(high) >= 2 or len(close) >= 2 else "warn"
@@ -401,7 +411,7 @@ def _salary_consistency(txns: list[dict], bad_rows: set[int], flags: list[list[s
 
 def _statement_period(txns: list[dict]) -> dict:
     label = "Statement covers at least 6 months"
-    start, end = _d(txns[0]["date"]), _d(txns[-1]["date"])
+    start, end = to_date(txns[0]["date"]), to_date(txns[-1]["date"])
     start, end = min(start, end), max(start, end)
     months = ((end - start).days + 1) / 30.44
     detail = f"Covers {months:.1f} months ({start.isoformat()} to {end.isoformat()})."
@@ -427,17 +437,20 @@ def check_integrity(transactions: list[dict], meta: dict) -> dict:
             _check("statement_period", "Statement covers at least 6 months", "fail", "No transactions found.", False)],
             "txn_flags": []}
     bal_check, bad_rows = _balance_continuity(txns, flags)
+    salary_check = _salary_consistency(txns, bad_rows, flags)
+    # PDF editor traces only count as tampering when the figures themselves are wrong
+    content_failures = [_PROBLEMS[c["id"]][0] for c in (bal_check, salary_check) if c["status"] == "fail"]
     checks = [
         bal_check,
         _duplicates(txns, flags),
         _date_order_and_gaps(txns),
     ]
-    pdf = _pdf_metadata(meta or {})
+    pdf = _pdf_metadata(meta or {}, content_failures)
     if pdf:
         checks.append(pdf)
     checks += [
         _round_tripping(txns, flags),
-        _salary_consistency(txns, bad_rows, flags),
+        salary_check,
         _statement_period(txns),
     ]
     score = 100

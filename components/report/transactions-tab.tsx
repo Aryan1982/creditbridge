@@ -16,7 +16,7 @@ function categoryTone(c: string): Tone {
 
 type Dir = "all" | "in" | "out";
 
-export function TransactionsTab({ transactions, flaggedCount }: { transactions: Txn[]; flaggedCount: number }) {
+export function TransactionsTab({ transactions, total, flaggedCount }: { transactions: Txn[]; total: number; flaggedCount: number }) {
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("all");
   const [dir, setDir] = useState<Dir>("all");
@@ -137,7 +137,8 @@ export function TransactionsTab({ transactions, flaggedCount }: { transactions: 
       </div>
       <p className="foot flex items-center justify-center gap-3" aria-live="polite">
         <span className="tnum">
-          {rows.length.toLocaleString("en-IN")} of {transactions.length.toLocaleString("en-IN")} transactions
+          {total > transactions.length && `Latest ${transactions.length.toLocaleString("en-IN")} of ${total.toLocaleString("en-IN")} · `}
+          {rows.length.toLocaleString("en-IN")} of {transactions.length.toLocaleString("en-IN")} shown
         </span>
         {filtersOn && (
           <button

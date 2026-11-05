@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, type ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 
 export interface TabDef {
   id: string;
@@ -9,8 +9,8 @@ export interface TabDef {
 }
 
 /** Tabs rendered as an Apple segmented control (scrolls horizontally on narrow screens). */
-export function Tabs({ tabs, value, onChange, label }: { tabs: TabDef[]; value: string; onChange: (id: string) => void; label: string }) {
-  const base = useId();
+/** `idPrefix` must match the TabPanel's so tab and panel reference each other. */
+export function Tabs({ tabs, value, onChange, label, idPrefix }: { tabs: TabDef[]; value: string; onChange: (id: string) => void; label: string; idPrefix: string }) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
 
   function move(i: number) {
@@ -31,11 +31,12 @@ export function Tabs({ tabs, value, onChange, label }: { tabs: TabDef[]; value: 
               ref={(el) => {
                 refs.current[i] = el;
               }}
-              id={`${base}-tab-${t.id}`}
+              id={`${idPrefix}-tab-${t.id}`}
               role="tab"
               type="button"
               aria-selected={sel}
-              aria-controls={`panel-${t.id}`}
+              // Only the selected panel is mounted, so only it can be referenced.
+              aria-controls={sel ? `${idPrefix}-panel-${t.id}` : undefined}
               tabIndex={sel ? 0 : -1}
               data-on={sel}
               onClick={(e) => {
@@ -62,9 +63,9 @@ export function Tabs({ tabs, value, onChange, label }: { tabs: TabDef[]; value: 
   );
 }
 
-export function TabPanel({ id, children }: { id: string; children: ReactNode }) {
+export function TabPanel({ id, idPrefix, children }: { id: string; idPrefix: string; children: ReactNode }) {
   return (
-    <div role="tabpanel" id={`panel-${id}`} tabIndex={-1} className="animate-rise pt-5 outline-none">
+    <div role="tabpanel" id={`${idPrefix}-panel-${id}`} aria-labelledby={`${idPrefix}-tab-${id}`} tabIndex={-1} className="animate-rise pt-5 outline-none">
       {children}
     </div>
   );

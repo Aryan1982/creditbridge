@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useRef, useState, type KeyboardEvent } from "react";
+import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from "@/lib/api";
 import { personaLabel } from "@/lib/format";
 import type { Sample } from "@/lib/types";
 import { Badge, Button, ErrorState, Skeleton } from "@/components/ui";
@@ -14,7 +15,7 @@ export type Source =
 type Method = "upload" | "aa" | "sample";
 
 const METHODS: { id: Method; title: string; body: string }[] = [
-  { id: "upload", title: "Upload statement", body: "PDF or CSV from your bank" },
+  { id: "upload", title: "Upload statement", body: "CSV, PDF or AA JSON from your bank" },
   { id: "aa", title: "Account Aggregator", body: "Share securely with consent" },
   { id: "sample", title: "Try a sample profile", body: "See how it works first" },
 ];
@@ -25,7 +26,6 @@ export const FORMAT_LABEL: Record<Sample["format"], string> = {
   aa_json: "Account Aggregator",
 };
 
-const MAX_BYTES = 10 * 1024 * 1024;
 
 function MethodIcon({ id }: { id: Method }) {
   const common = { fill: "none", stroke: "currentColor", strokeWidth: 1.7, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
@@ -190,11 +190,11 @@ function UploadPanel({ source, onSource, example }: { source: Source | null; onS
   function accept(f: File | undefined) {
     if (!f) return;
     if (!/\.(pdf|csv|json)$/i.test(f.name)) {
-      setError("Please choose a PDF or CSV bank statement.");
+      setError("Please choose a CSV, PDF or Account Aggregator JSON bank statement.");
       return;
     }
-    if (f.size > MAX_BYTES) {
-      setError("That file is larger than 10 MB. Please export a shorter period.");
+    if (f.size > MAX_UPLOAD_BYTES) {
+      setError(`That file is larger than ${MAX_UPLOAD_LABEL}. Please export a shorter period.`);
       return;
     }
     setError(null);
@@ -224,7 +224,7 @@ function UploadPanel({ source, onSource, example }: { source: Source | null; onS
           </svg>
         </span>
         <p className="mt-4 text-[17px] font-semibold tracking-[-0.01em] text-fg">Drop your statement here</p>
-        <p className="mt-1 text-[13px] text-muted">PDF or CSV, up to 10 MB</p>
+        <p className="mt-1 text-[13px] text-muted">CSV, PDF or Account Aggregator JSON, up to {MAX_UPLOAD_LABEL}</p>
         <Button variant="secondary" className="mt-5" onClick={() => inputRef.current?.click()}>
           Choose file
         </Button>

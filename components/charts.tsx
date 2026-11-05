@@ -10,7 +10,6 @@ import {
   LineChart,
   Pie,
   PieChart,
-  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -104,14 +103,12 @@ export function HistogramChart({
   data,
   xKey,
   yKey,
-  colors,
   yLabel,
   tickFormat,
 }: {
   data: Record<string, string | number>[];
   xKey: string;
   yKey: string;
-  colors?: string[];
   yLabel: string;
   tickFormat?: (v: string) => string;
 }) {
@@ -123,9 +120,7 @@ export function HistogramChart({
           <XAxis dataKey={xKey} tick={AXIS} tickLine={false} axisLine={{ stroke: GRID }} interval={0} tickFormatter={tickFormat} />
           <YAxis allowDecimals={false} tick={AXIS} tickLine={false} axisLine={false} width={40} />
           <Tooltip cursor={CURSOR} content={<TooltipCard format={(v) => String(v)} />} />
-          <Bar dataKey={yKey} name={yLabel} radius={[5, 5, 0, 0]} fill="var(--accent)" maxBarSize={56}>
-            {colors && data.map((_, i) => <Cell key={i} fill={colors[i % colors.length]} />)}
-          </Bar>
+          <Bar dataKey={yKey} name={yLabel} radius={[5, 5, 0, 0]} fill="var(--accent)" maxBarSize={56} />
         </BarChart>
       </ResponsiveContainer>
     </div>
@@ -196,13 +191,11 @@ export function HBarChart({
   data,
   format,
   height,
-  reference,
   domain,
 }: {
   data: { label: string; value: number }[];
   format: (v: number) => string;
   height?: number;
-  reference?: number;
   domain?: [number, number];
 }) {
   const h = height ?? Math.max(160, data.length * 30 + 24);
@@ -214,7 +207,6 @@ export function HBarChart({
           <XAxis type="number" domain={domain ?? [0, "auto"]} allowDataOverflow tickFormatter={format} tick={AXIS} tickLine={false} axisLine={false} />
           <YAxis type="category" dataKey="label" tick={{ ...AXIS, fill: "var(--fg-2)" }} tickLine={false} axisLine={false} width={180} />
           <Tooltip cursor={CURSOR} content={<TooltipCard format={format} />} />
-          {reference != null && <ReferenceLine x={reference} stroke="var(--faint)" strokeDasharray="4 4" />}
           <Bar dataKey="value" name="Value" fill="var(--accent)" radius={[0, 5, 5, 0]} maxBarSize={16} />
         </BarChart>
       </ResponsiveContainer>

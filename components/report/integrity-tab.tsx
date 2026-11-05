@@ -41,7 +41,7 @@ export function IntegrityTab({ integrity }: { integrity: Integrity }) {
               <StatusIcon status={c.status} className="mt-0.5 h-[18px]! w-[18px]!" />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-[15px] font-semibold tracking-[-0.01em] text-fg">{c.label}</p>
+                  <p className="text-[15px] font-semibold tracking-[-0.01em] text-fg">{c.status !== "pass" && c.problem ? c.problem : c.label}</p>
                   <Badge tone={statusTone(c.status)}>{c.status === "pass" ? "Passed" : c.status === "warn" ? "Warning" : "Failed"}</Badge>
                 </div>
                 <p className="mt-0.5 text-[13px] leading-relaxed text-muted">{c.detail}</p>

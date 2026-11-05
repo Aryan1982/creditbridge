@@ -29,7 +29,6 @@ export function num(x: number | null | undefined, digits = 3): string {
 }
 
 const dateFmt = new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric" });
-const shortDateFmt = new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short" });
 const monthFmt = new Intl.DateTimeFormat("en-IN", { month: "short", year: "2-digit" });
 
 function parseISO(d: string): Date {
@@ -41,10 +40,6 @@ function parseISO(d: string): Date {
 export function fmtDate(d: string | null | undefined): string {
   if (!d) return "—";
   return dateFmt.format(parseISO(d));
-}
-
-export function fmtShortDate(d: string): string {
-  return shortDateFmt.format(parseISO(d));
 }
 
 export function fmtMonth(m: string): string {
@@ -145,18 +140,13 @@ export const TONE_COLOR: Record<Tone, string> = {
   accent: "var(--accent)",
 };
 
-export const FLAG_LABEL: Record<string, string> = {
+/** Per-transaction flags emitted by engine/integrity.py. */
+const FLAG_LABEL: Record<string, string> = {
   round_trip: "Circular transfer",
   balance_mismatch: "Balance mismatch",
-  duplicate: "Duplicate",
   duplicate_id: "Duplicate reference",
   duplicate_row: "Duplicate entry",
   salary_outlier: "Unusual salary credit",
-  date_gap: "Date gap",
-  out_of_order: "Out of order",
-  bounce: "Bounce",
-  loan_app: "Loan app",
-  betting: "Betting",
 };
 
 export function flagLabel(f: string): string {

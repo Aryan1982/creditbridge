@@ -11,6 +11,8 @@ Offline tool (reportlab allowed). Reads ML's `data/samples/index.json` + `<id>.c
 
 Usage (run after ML's sample generator; rerun whenever data/samples/*.csv change):
   .venv/bin/python ml/make_sample_variants.py
+It finishes by running the runtime integrity check on every sample and exits non-zero unless all genuine
+samples pass and all tampered ones fail.
 """
 from __future__ import annotations
 
@@ -412,6 +414,27 @@ def main() -> None:
     for e in extra:
         print(f"{e['id']:<34} {e['format']:<8} tampered={e['tampered']}  {e['file']}")
     print(f"wrote {out_dir / 'extra.json'} ({len(extra)} items)")
+    verify(out_dir, json.loads(index.read_text(encoding="utf-8")) + extra)
+
+
+def verify(out_dir: Path, items: list[dict]) -> None:
+    """Every genuine sample must pass the runtime integrity check and every tampered one must fail."""
+    if str(ROOT) not in sys.path:
+        sys.path.insert(0, str(ROOT))
+    from engine.integrity import check_integrity
+    from engine.parse import parse_upload
+
+    wrong = []
+    for it in items:
+        path = out_dir / it["file"]
+        report = check_integrity(*parse_upload(path.name, path.read_bytes()))
+        expected = "fail" if it["tampered"] else "pass"
+        if report["status"] != expected:
+            wrong.append(f"{it['id']}: integrity {report['status']}, expected {expected} "
+                         f"({[(c['id'], c['status']) for c in report['checks'] if c['status'] != 'pass']})")
+    if wrong:
+        sys.exit("integrity verification failed:\n  " + "\n  ".join(wrong))
+    print(f"verified integrity of {len(items)} samples: genuine pass, tampered fail")
 
 
 if __name__ == "__main__":

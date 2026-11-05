@@ -22,13 +22,15 @@ from fastapi.exceptions import RequestValidationError  # noqa: E402
 from fastapi.responses import FileResponse, JSONResponse  # noqa: E402
 
 from engine.analyze import analyze, model_card  # noqa: E402
-from engine.integrity import check_integrity  # noqa: E402
+from engine.integrity import check_integrity, failed_problems  # noqa: E402
 from engine.parse import ParseError, parse_upload  # noqa: E402
 
 log = logging.getLogger("creditbridge.api")
 
 SAMPLES_DIR = ROOT / "data" / "samples"
-MAX_UPLOAD_BYTES = 5 * 1024 * 1024
+# Vercel rejects request bodies over 4.5 MB before the function runs; stay safely below it (multipart overhead).
+MAX_UPLOAD_BYTES = 4 * 1024 * 1024
+UPLOAD_TOO_LARGE = "This file is larger than 4 MB. Please upload a smaller file — a CSV export is usually much smaller than a PDF."
 FORMATS = {".csv": "csv", ".pdf": "pdf", ".json": "aa_json"}
 
 # Loan asked for by each demo persona when the sample doesn't specify one.
@@ -138,8 +140,7 @@ def run_pipeline(filename: str, content: bytes, loan: Optional[dict], sample: Op
     # a failed integrity status downgrades approve -> review and is explained in the summary.
     for t, f in zip(txns, integrity.pop("txn_flags")):
         t["flags"] = list(f)
-    meta["integrity"] = {"status": integrity["status"],
-                         "failed": [c["problem"] for c in integrity["checks"] if c["status"] == "fail"]}
+    meta["integrity"] = {"status": integrity["status"], "failed": failed_problems(integrity)}
 
     try:
         report = analyze(txns, loan, meta)
@@ -208,7 +209,7 @@ async def analyze_endpoint(
     if file is not None and file.filename:
         content = await file.read(MAX_UPLOAD_BYTES + 1)
         if len(content) > MAX_UPLOAD_BYTES:
-            raise HTTPException(400, "File is larger than 5 MB. Please upload a smaller statement.")
+            raise HTTPException(413, UPLOAD_TOO_LARGE)
         if not content:
             raise HTTPException(400, "The uploaded file is empty.")
         return run_pipeline(file.filename, content, loan)

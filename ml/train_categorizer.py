@@ -4,8 +4,10 @@
   population (seed range 2_000_000+).
 * Evaluation: hold out ~25% of merchants / counterparties *per category*
   (group split), so test narrations come from merchants, employers, platforms,
-  lenders and people the model never saw. Bank-system narrations without a
-  counterparty (ATM, charges, interest, cash deposits) are split by row.
+  lenders and people the model never saw. A counterparty held out for one
+  category is held out for all, so the realised test share of rows is larger
+  (reported in `eval`). Bank-system narrations without a counterparty (ATM,
+  charges, interest, cash deposits) are split by row.
 * Export: vocabulary, idf, coefficients → engine/models/categorizer.json, then
   assert the numpy re-implementation matches sklearn's predict_proba.
 """
@@ -160,7 +162,9 @@ def main() -> dict:
     result = {
         "model": spec["meta"]["model"],
         "accuracy": round(acc, 4), "macro_f1": round(macro, 4),
-        "eval": "held-out unseen merchants/counterparties (25% of merchants per category never seen in training)",
+        "eval": (f"held-out unseen merchants/counterparties: about {TEST_SHARE:.0%} of the merchants in each category are "
+                 f"never seen in training (a merchant held out in one category is held out everywhere), giving a "
+                 f"test set of {int(test.sum()):,} narrations, {test.mean():.0%} of all rows"),
         "n_train": int((~test).sum()), "n_test": int(test.sum()), "n_features": spec["meta"]["n_features"],
         "per_class": per_class, "parity_max_abs_diff": drift,
     }

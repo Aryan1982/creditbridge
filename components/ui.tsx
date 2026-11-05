@@ -70,14 +70,6 @@ export function StatusDot({ tone, children, className = "" }: { tone: Tone; chil
 
 /* ---------- Surfaces ---------- */
 
-export function Card({ children, className = "", as: As = "div", id }: { children: ReactNode; className?: string; as?: "div" | "section" | "article"; id?: string }) {
-  return (
-    <As id={id} className={`card ${className}`}>
-      {children}
-    </As>
-  );
-}
-
 export function PageHeader({ kicker, title, sub, actions }: { kicker?: ReactNode; title: ReactNode; sub?: ReactNode; actions?: ReactNode }) {
   return (
     <div className="flex flex-col gap-5 pb-7 pt-8 md:flex-row md:items-end md:justify-between md:pt-12">

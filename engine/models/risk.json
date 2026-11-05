@@ -1,55 +1,24 @@
 {
- "version": "2.0",
- "model": "standardized logistic regression scorecard (sign-constrained)",
- "intercept": -1.53567569,
+ "version": "2.1",
+ "model": "sign-constrained L2 logistic regression scorecard (standardized features)",
+ "intercept": -1.53780482,
  "features": [
   {
-   "key": "income_cv",
-   "label": "Income variability",
-   "transform": "identity",
-   "clip": [
-    0,
-    2.0
-   ],
-   "mean": 0.47468817,
-   "std": 0.60625516,
-   "weight": 0.09229608,
-   "actionable": false,
-   "p05": 0.016428,
-   "p50": 0.217146,
-   "p95": 2.0
-  },
-  {
-   "key": "buffer_months",
-   "label": "Savings buffer (months of income)",
+   "key": "income_net_monthly",
+   "label": "Income available for repayments",
    "transform": "log1p",
    "clip": [
-    0,
-    12
+    1000.0,
+    500000
    ],
-   "mean": 1.05529302,
-   "std": 0.47761916,
-   "weight": -0.34261665,
-   "actionable": true,
-   "p05": 0.42212,
-   "p50": 0.98341,
-   "p95": 2.022624
-  },
-  {
-   "key": "net_cashflow_ratio",
-   "label": "Money left over each month",
-   "transform": "identity",
-   "clip": [
-    -1,
-    1
-   ],
-   "mean": 0.03408113,
-   "std": 0.20013131,
-   "weight": -0.0846519,
+   "mean": 9.83674925,
+   "std": 0.86143173,
+   "weight": -0.0210471,
+   "expected_sign": -1,
    "actionable": false,
-   "p05": -0.291303,
-   "p50": 0.074481,
-   "p95": 0.183611
+   "p05": 8.366428,
+   "p50": 9.95717,
+   "p95": 10.98817
   },
   {
    "key": "foir",
@@ -61,7 +30,8 @@
    ],
    "mean": 0.14340987,
    "std": 0.22276788,
-   "weight": 0.27110949,
+   "weight": 0.18923871,
+   "expected_sign": 1,
    "actionable": true,
    "p05": 0.0,
    "p50": 0.053389,
@@ -77,7 +47,8 @@
    ],
    "mean": 0.18336992,
    "std": 0.31847485,
-   "weight": 0.1279863,
+   "weight": 0.17282784,
+   "expected_sign": 1,
    "actionable": true,
    "p05": 0.0,
    "p50": 0.0,
@@ -93,7 +64,8 @@
    ],
    "mean": 0.05780799,
    "std": 0.14242721,
-   "weight": 0.13156657,
+   "weight": 0.17308383,
+   "expected_sign": 1,
    "actionable": true,
    "p05": 0.0,
    "p50": 0.0,
@@ -109,7 +81,8 @@
    ],
    "mean": 0.00545461,
    "std": 0.02332194,
-   "weight": 0.04430496,
+   "weight": 0.05692081,
+   "expected_sign": 1,
    "actionable": true,
    "p05": 0.0,
    "p50": 0.0,
@@ -125,7 +98,8 @@
    ],
    "mean": 0.68816782,
    "std": 0.1390679,
-   "weight": -0.3363741,
+   "weight": -0.34421037,
+   "expected_sign": -1,
    "actionable": true,
    "p05": 0.443637,
    "p50": 0.703648,
@@ -139,13 +113,14 @@
     0,
     0.5
    ],
-   "mean": 0.02390497,
-   "std": 0.04689017,
-   "weight": -0.25301262,
+   "mean": 0.02247612,
+   "std": 0.04029682,
+   "weight": -0.28840395,
+   "expected_sign": -1,
    "actionable": true,
    "p05": 0.0,
-   "p50": 0.004029,
-   "p95": 0.104485
+   "p50": 0.003819,
+   "p95": 0.102546
   },
   {
    "key": "pre_income_buffer",
@@ -155,13 +130,14 @@
     0,
     10
    ],
-   "mean": 0.94523917,
-   "std": 0.4952513,
-   "weight": -0.00193296,
+   "mean": 0.92850239,
+   "std": 0.49319965,
+   "weight": -0.15004555,
+   "expected_sign": -1,
    "actionable": true,
-   "p05": 0.258054,
-   "p50": 0.875319,
-   "p95": 1.927974
+   "p05": 0.22878,
+   "p50": 0.86664,
+   "p95": 1.883619
   }
  ],
  "scale": {

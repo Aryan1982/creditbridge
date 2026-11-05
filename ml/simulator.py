@@ -511,25 +511,36 @@ def _risk_logit(p: Profile) -> float:
             + 3.0 * (0.75 - p.wtp) + p.eps)
 
 
-def _default_prob(base: float, z: float, shock_p: float, draws: int = 1, rng=None) -> float:
-    """P(any default in 12 future months); monthly hazard with shock months."""
-    h0 = 1 / (1 + math.exp(-(base + z)))
-    h1 = 1 / (1 + math.exp(-(base + z + 2.2)))
-    surv = ((1 - shock_p) * (1 - h0) + shock_p * (1 - h1)) ** 12
-    return 1 - surv
+MONTHLY_NOISE_SD = 0.25  # per-month logit noise in the future window (simulate_label)
+_GH_X, _GH_W = np.polynomial.hermite_e.hermegauss(9)  # nodes/weights for E[f(N(0,1))]
+_GH_W = _GH_W / _GH_W.sum()
+
+
+def _default_prob(base: float, z, shock_p):
+    """P(any default in 12 future months) under exactly the process `simulate_label` samples:
+    each month is a shock month with prob `shock_p` (+2.2 logit) and carries independent
+    N(0, MONTHLY_NOISE_SD) logit noise, integrated out by Gauss–Hermite quadrature.
+    Vectorised over `z` / `shock_p`."""
+    z = np.asarray(z, dtype=float)[..., None]
+    s = np.asarray(shock_p, dtype=float)
+    noise = MONTHLY_NOISE_SD * _GH_X
+    h0 = (_GH_W / (1 + np.exp(-(base + z + noise)))).sum(-1)
+    h1 = (_GH_W / (1 + np.exp(-(base + z + 2.2 + noise)))).sum(-1)
+    return 1 - ((1 - s) * (1 - h0) + s * (1 - h1)) ** 12
 
 
 @lru_cache(maxsize=1)
 def calibrated_intercepts() -> dict[str, float]:
-    """Persona intercepts so the population default rate hits the target per persona."""
+    """Persona intercepts so the expected population default rate hits the target per persona."""
     out = {}
     for persona in PERSONAS:
         profs = [draw_profile(10_000_000 + i, persona) for i in range(3000)]
-        zs = [(_risk_logit(p), p.shock_p) for p in profs]
+        z = np.array([_risk_logit(p) for p in profs])
+        s = np.array([p.shock_p for p in profs])
         lo, hi = -15.0, 2.0
         for _ in range(50):
             mid = (lo + hi) / 2
-            rate = sum(_default_prob(mid, z, s) for z, s in zs) / len(zs)
+            rate = float(_default_prob(mid, z, s).mean())
             lo, hi = (mid, hi) if rate < TARGET_DEFAULT_RATE[persona] else (lo, mid)
         out[persona] = (lo + hi) / 2
     return out
@@ -542,7 +553,7 @@ def simulate_label(p: Profile) -> int:
     z = _risk_logit(p)
     for _ in range(12):
         shock = rng.random() < p.shock_p
-        h = 1 / (1 + math.exp(-(base + z + 2.2 * shock + rng.normal(0, 0.25))))
+        h = 1 / (1 + math.exp(-(base + z + 2.2 * shock + rng.normal(0, MONTHLY_NOISE_SD))))
         if rng.random() < h:
             return 1
     return 0

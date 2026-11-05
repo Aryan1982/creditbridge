@@ -154,7 +154,6 @@ export function ModelCardView() {
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    setError(null);
     getModelCard()
       .then(setCard)
       .catch((e: Error) => setError(e.message));
@@ -168,7 +167,16 @@ export function ModelCardView() {
         sub="How the CreditBridge transaction categorizer and risk model were built and evaluated, for credit risk teams, auditors and regulators."
       />
       {error ? (
-        <ErrorState title="Couldn’t load the model card" message={error} action={<Button onClick={() => setAttempt((a) => a + 1)}>Try again</Button>} />
+        <ErrorState title="Couldn’t load the model card" message={error} action={
+            <Button
+              onClick={() => {
+                setError(null);
+                setAttempt((a) => a + 1);
+              }}
+            >
+              Try again
+            </Button>
+          } />
       ) : !card ? (
         <div className="grid gap-[18px] lg:grid-cols-[240px_1fr]" aria-busy="true" aria-label="Loading model card">
           <Skeleton className="hidden h-[280px] lg:block" />

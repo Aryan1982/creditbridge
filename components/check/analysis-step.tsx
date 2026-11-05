@@ -38,15 +38,22 @@ export function AnalysisStep({
   // One request per attempt, even if the effect re-runs (React StrictMode in development).
   const inflight = useRef<{ attempt: number; promise: Promise<Report> } | null>(null);
   const doneRef = useRef(onDone);
-  doneRef.current = onDone;
-
-  // The real request.
   useEffect(() => {
-    let cancelled = false;
+    doneRef.current = onDone;
+  }, [onDone]);
+
+  function retry() {
+    resultRef.current = null;
     setActive(0);
     setResult(null);
     setError(null);
-    resultRef.current = null;
+    setAttempt((a) => a + 1);
+  }
+
+  // The real request.
+  useEffect(() => {
+    // State is reset by retry() before the attempt changes; source and loan are fixed while this step is mounted.
+    let cancelled = false;
     if (inflight.current?.attempt !== attempt) {
       inflight.current = {
         attempt,
@@ -148,7 +155,7 @@ const labels = stageLabels(result?.applicant.transaction_count ?? null);
             {error}
           </p>
           <div className="mt-5 flex flex-col gap-2.5 sm:flex-row">
-            <Button className="flex-1" onClick={() => setAttempt((a) => a + 1)}>
+            <Button className="flex-1" onClick={retry}>
               Try again
             </Button>
             <Button variant="tinted" className="flex-1" onClick={onBack}>

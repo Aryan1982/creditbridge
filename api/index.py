@@ -19,7 +19,7 @@ if str(ROOT) not in sys.path:
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile  # noqa: E402
 from fastapi.exceptions import RequestValidationError  # noqa: E402
-from fastapi.responses import FileResponse, JSONResponse  # noqa: E402
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse  # noqa: E402
 
 from engine.analyze import analyze, model_card  # noqa: E402
 from engine.integrity import check_integrity, failed_problems  # noqa: E402
@@ -179,6 +179,12 @@ def _loan_from_form(amount: Optional[float], tenure: Optional[int], purpose: Opt
 
 
 # --------------------------------------------------------------------------- routes
+
+@app.get("/", include_in_schema=False)
+def root():
+    """Only reachable when the API runs standalone (locally); on Vercel `/` is the web app."""
+    return RedirectResponse("/api/docs")
+
 
 @app.get("/api/health")
 def health():

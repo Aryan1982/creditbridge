@@ -2,7 +2,7 @@
 
 **Neural Storm 2026 · Track 3: Human Impact · Problem statement HI-04 — Alternative Credit Scoring for the Unbanked**
 
-**Live:** https://creditbridge-bay.vercel.app · **Repo:** https://github.com/Aryan1982/creditbridge
+**Live:** https://creditbridge-bay.vercel.app · **Demo video:** https://www.youtube.com/watch?v=gH8jdtwzNqw · **Repo:** https://github.com/Aryan1982/creditbridge
 
 **Team:** CreditBridge — Aryan Thakor (solo)
 

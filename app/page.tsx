@@ -1,5 +1,5 @@
 import { AppIcon } from "@/components/logo";
-import { ButtonLink, ChevronLink, StatStrip, StatusDot } from "@/components/ui";
+import { ButtonLink, ChevronLink, StatStrip } from "@/components/ui";
 
 const STEPS = [
   {
@@ -26,63 +26,25 @@ const STEPS = [
 
 function Tick() {
   return (
-    <svg viewBox="0 0 16 16" className="mt-[3px] h-4 w-4 flex-none text-accent" aria-hidden="true">
+    <svg
+      viewBox="0 0 16 16"
+      className="mt-[3px] h-4 w-4 flex-none text-accent"
+      aria-hidden="true"
+    >
       <circle cx="8" cy="8" r="8" fill="currentColor" opacity=".14" />
-      <path d="M4.8 8.3l2.1 2.1 4.3-4.6" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M4.8 8.3l2.1 2.1 4.3-4.6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
 
-function PreviewWindow() {
-  const bars = [62, 70, 58, 74, 66, 79, 71, 83, 77];
-  return (
-    <figure className="card mx-auto w-full max-w-[920px] overflow-hidden text-left shadow-sheet!">
-      <figcaption className="sr-only">Example of a CreditBridge report</figcaption>
-      <div className="flex items-center gap-2 border-b border-sep px-4 py-3" aria-hidden="true">
-        <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
-        <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
-        <span className="h-3 w-3 rounded-full bg-[#28c840]" />
-        <span className="ml-3 text-[12px] text-faint">Report · Ravi K.</span>
-      </div>
-      <div className="grid gap-6 p-5 sm:p-7 md:grid-cols-[1fr_1.15fr]">
-        <div className="headline">
-          <p className="k">Credit score · Delivery partner</p>
-          <p className="big mt-1">
-            712<small>out of 900</small>
-          </p>
-          <p className="range-line">Band B · 9 months · 412 transactions</p>
-          <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-fill">
-            <div className="h-full rounded-full bg-positive" style={{ width: "68%" }} />
-          </div>
-          <div className="mt-5 flex items-center justify-between">
-            <StatusDot tone="positive">Approved</StatusDot>
-            <span className="text-[13px] text-muted tnum">₹6,800/mo affordable</span>
-          </div>
-        </div>
-        <div className="flex flex-col">
-          <p className="group-title">Monthly income</p>
-          <div className="flex h-[112px] items-end gap-1.5" aria-hidden="true">
-            {bars.map((h, i) => (
-              <div key={i} className={`flex-1 rounded-[4px] ${i === bars.length - 1 ? "bg-accent" : "bg-series-3"}`} style={{ height: `${h}%` }} />
-            ))}
-          </div>
-          <div className="group-list mt-4 text-[13px]">
-            {[
-              ["Income arrived in 9 of 9 months", "positive", "Helps"],
-              ["Existing EMI paid on time", "positive", "Helps"],
-              ["Balance under ₹1,500 in 4 months", "negative", "Hurts"],
-            ].map(([t, tone, l]) => (
-              <div key={t} className="flex items-center justify-between gap-3 px-4 py-2.5">
-                <span className="text-fg-2">{t}</span>
-                <span className={tone === "positive" ? "font-medium text-positive" : "font-medium text-negative"}>{l}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </figure>
-  );
-}
+const DEMO_VIDEO_ID = "gH8jdtwzNqw";
 
 export default function Home() {
   return (
@@ -90,13 +52,16 @@ export default function Home() {
       <section className="container-page pb-16 pt-16 text-center md:pb-24 md:pt-24">
         <div className="mx-auto flex w-fit items-center gap-2.5">
           <AppIcon size={28} />
-          <span className="text-[19px] font-semibold tracking-[-0.02em] text-fg">CreditBridge</span>
+          <span className="text-[19px] font-semibold tracking-[-0.02em] text-fg">
+            CreditBridge
+          </span>
         </div>
         <h1 className="mx-auto mt-5 text-balance max-w-[15ch] text-[44px] font-bold leading-[1.05] tracking-[-0.04em] text-fg sm:text-[64px] lg:text-[72px]">
           Credit for people the bureau can’t see.
         </h1>
         <p className="mx-auto mt-6 max-w-[40ch] text-[19px] leading-snug text-muted sm:text-[21px]">
-          Your bank statement already proves you pay on time. CreditBridge turns it into a verified, explainable credit decision.
+          Your bank statement already proves you pay on time. CreditBridge turns
+          it into a verified, explainable credit decision.
         </p>
         <div className="mt-9 flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-7">
           <ButtonLink href="/check" size="lg">
@@ -106,28 +71,86 @@ export default function Home() {
             Open the lender console
           </ChevronLink>
         </div>
-        <p className="mt-6 text-[13px] text-faint">No credit history needed · Statements are analysed in memory and never stored</p>
+        <p className="mt-6 text-[13px] text-faint">
+          No credit history needed · Statements are analysed in memory and never
+          stored
+        </p>
         <div className="mt-14 md:mt-20">
-          <PreviewWindow />
+          <figure className="card mx-auto w-full max-w-[960px] overflow-hidden text-left shadow-sheet!">
+            <div className="flex items-center gap-2 border-b border-sep px-4 py-3">
+              <span
+                className="h-3 w-3 rounded-full bg-[#ff5f57]"
+                aria-hidden="true"
+              />
+              <span
+                className="h-3 w-3 rounded-full bg-[#febc2e]"
+                aria-hidden="true"
+              />
+              <span
+                className="h-3 w-3 rounded-full bg-[#28c840]"
+                aria-hidden="true"
+              />
+              <figcaption className="ml-3 truncate text-[12px] text-faint">
+                Product demo · 2 min
+              </figcaption>
+              <a
+                href={`https://www.youtube.com/watch?v=${DEMO_VIDEO_ID}`}
+                target="_blank"
+                rel="noreferrer"
+                className="ml-auto flex-none text-[12px] font-medium text-accent hover:underline"
+              >
+                Watch on YouTube
+              </a>
+            </div>
+            <div className="relative aspect-video w-full bg-black">
+              <iframe
+                className="absolute inset-0 h-full w-full"
+                src={`https://www.youtube-nocookie.com/embed/${DEMO_VIDEO_ID}?rel=0&modestbranding=1`}
+                title="CreditBridge product demo"
+                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+              />
+            </div>
+          </figure>
         </div>
       </section>
 
-      <section aria-labelledby="problem" className="container-page py-16 md:py-24">
+      <section
+        aria-labelledby="problem"
+        className="container-page py-16 md:py-24"
+      >
         <div className="mx-auto max-w-[720px] text-center">
-          <h2 id="problem" className="text-balance text-[34px] font-bold leading-[1.1] tracking-[-0.035em] text-fg sm:text-[48px]">
+          <h2
+            id="problem"
+            className="text-balance text-[34px] font-bold leading-[1.1] tracking-[-0.035em] text-fg sm:text-[48px]"
+          >
             No score isn’t the same as no record.
           </h2>
           <p className="mt-5 text-[17px] leading-relaxed text-muted sm:text-[19px]">
-            Gig workers, farmers, shopkeepers and first-time earners are turned away or pushed to instant-loan apps because lenders rely on
-            bureau history they don’t have. Their bank statements tell a fuller story.
+            Gig workers, farmers, shopkeepers and first-time earners are turned
+            away or pushed to instant-loan apps because lenders rely on bureau
+            history they don’t have. Their bank statements tell a fuller story.
           </p>
         </div>
         <StatStrip
           className="mx-auto mt-12 max-w-[960px]"
           items={[
-            { label: "Credit-invisible adults in India", value: "190M", hint: "No usable bureau history" },
-            { label: "History needed", value: "6–12 months", hint: "Of bank or UPI transactions" },
-            { label: "Bureau records required", value: "None", hint: "Decisions come from cash flow" },
+            {
+              label: "Credit-invisible adults in India",
+              value: "190M",
+              hint: "No usable bureau history",
+            },
+            {
+              label: "History needed",
+              value: "6–12 months",
+              hint: "Of bank or UPI transactions",
+            },
+            {
+              label: "Bureau records required",
+              value: "None",
+              hint: "Decisions come from cash flow",
+            },
           ]}
         />
       </section>
@@ -135,7 +158,10 @@ export default function Home() {
       <section aria-labelledby="how" className="container-page py-16 md:py-24">
         <div className="text-center">
           <p className="text-[17px] font-semibold text-accent">How it works</p>
-          <h2 id="how" className="text-balance mx-auto mt-2 max-w-[20ch] text-[34px] font-bold leading-[1.1] tracking-[-0.035em] text-fg sm:text-[48px]">
+          <h2
+            id="how"
+            className="text-balance mx-auto mt-2 max-w-[20ch] text-[34px] font-bold leading-[1.1] tracking-[-0.035em] text-fg sm:text-[48px]"
+          >
             From statement to decision in four steps.
           </h2>
         </div>
@@ -143,13 +169,28 @@ export default function Home() {
           {STEPS.map((s, i) => (
             <li key={s.title} className="card flex flex-col p-6">
               <span className="flex h-11 w-11 items-center justify-center rounded-full bg-accent-soft text-accent">
-                <svg viewBox="0 0 24 24" className="h-[22px] w-[22px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <svg
+                  viewBox="0 0 24 24"
+                  className="h-[22px] w-[22px]"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
                   <path d={s.icon} />
                 </svg>
               </span>
-              <p className="mt-6 text-[13px] font-medium text-faint tnum">Step {i + 1}</p>
-              <h3 className="mt-1 text-[19px] font-semibold tracking-[-0.02em] text-fg">{s.title}</h3>
-              <p className="mt-2 text-[14px] leading-relaxed text-muted">{s.body}</p>
+              <p className="mt-6 text-[13px] font-medium text-faint tnum">
+                Step {i + 1}
+              </p>
+              <h3 className="mt-1 text-[19px] font-semibold tracking-[-0.02em] text-fg">
+                {s.title}
+              </h3>
+              <p className="mt-2 text-[14px] leading-relaxed text-muted">
+                {s.body}
+              </p>
             </li>
           ))}
         </ol>
@@ -158,21 +199,35 @@ export default function Home() {
       <section aria-labelledby="who" className="container-page py-16 md:py-24">
         <div className="text-center">
           <p className="text-[17px] font-semibold text-accent">Who it’s for</p>
-          <h2 id="who" className="mt-2 text-[34px] font-bold leading-[1.1] tracking-[-0.035em] text-fg sm:text-[48px]">
+          <h2
+            id="who"
+            className="mt-2 text-[34px] font-bold leading-[1.1] tracking-[-0.035em] text-fg sm:text-[48px]"
+          >
             Built for both sides of the loan.
           </h2>
         </div>
         <div className="mt-12 grid gap-[18px] md:grid-cols-2">
           <article className="card flex flex-col p-8 sm:p-10">
             <p className="kicker">Borrowers</p>
-            <h3 className="mt-1 text-[28px] font-bold leading-tight tracking-[-0.03em] text-fg">Know before you apply.</h3>
+            <h3 className="mt-1 text-[28px] font-bold leading-tight tracking-[-0.03em] text-fg">
+              Know before you apply.
+            </h3>
             <p className="mt-3 text-[15px] leading-relaxed text-muted">
-              See whether you qualify, how much you can comfortably repay, and exactly what would raise your score.
+              See whether you qualify, how much you can comfortably repay, and
+              exactly what would raise your score.
             </p>
             <ul className="mt-7 space-y-3 text-[15px] text-fg-2">
-              <li className="flex gap-3"><Tick />A clear decision with the reasons behind it</li>
-              <li className="flex gap-3"><Tick />An EMI sized to your real income</li>
-              <li className="flex gap-3"><Tick />Results in English, हिंदी and తెలుగు</li>
+              <li className="flex gap-3">
+                <Tick />A clear decision with the reasons behind it
+              </li>
+              <li className="flex gap-3">
+                <Tick />
+                An EMI sized to your real income
+              </li>
+              <li className="flex gap-3">
+                <Tick />
+                Results in English, हिंदी and తెలుగు
+              </li>
             </ul>
             <div className="mt-auto pt-9">
               <ChevronLink href="/check" className="text-[17px]">
@@ -182,14 +237,26 @@ export default function Home() {
           </article>
           <article className="card flex flex-col p-8 sm:p-10">
             <p className="kicker">NBFCs and microfinance lenders</p>
-            <h3 className="mt-1 text-[28px] font-bold leading-tight tracking-[-0.03em] text-fg">Underwrite thin files with evidence.</h3>
+            <h3 className="mt-1 text-[28px] font-bold leading-tight tracking-[-0.03em] text-fg">
+              Underwrite thin files with evidence.
+            </h3>
             <p className="mt-3 text-[15px] leading-relaxed text-muted">
-              Score applicants from verified cash flow, catch edited statements, and document every decision.
+              Score applicants from verified cash flow, catch edited statements,
+              and document every decision.
             </p>
             <ul className="mt-7 space-y-3 text-[15px] text-fg-2">
-              <li className="flex gap-3"><Tick />Portfolio view with statement checks per applicant</li>
-              <li className="flex gap-3"><Tick />Reason codes for every approve, review or decline</li>
-              <li className="flex gap-3"><Tick />Published model performance and fairness checks</li>
+              <li className="flex gap-3">
+                <Tick />
+                Portfolio view with statement checks per applicant
+              </li>
+              <li className="flex gap-3">
+                <Tick />
+                Reason codes for every approve, review or decline
+              </li>
+              <li className="flex gap-3">
+                <Tick />
+                Published model performance and fairness checks
+              </li>
             </ul>
             <div className="mt-auto flex flex-wrap gap-x-7 gap-y-2 pt-9">
               <ChevronLink href="/lender" className="text-[17px]">
@@ -204,8 +271,12 @@ export default function Home() {
       </section>
 
       <section className="container-page py-16 text-center md:py-24">
-        <h2 className="text-[34px] font-bold tracking-[-0.035em] text-fg sm:text-[40px]">See what your statement says about you.</h2>
-        <p className="mt-3 text-[17px] text-muted">Use your own statement, or try a sample profile.</p>
+        <h2 className="text-[34px] font-bold tracking-[-0.035em] text-fg sm:text-[40px]">
+          See what your statement says about you.
+        </h2>
+        <p className="mt-3 text-[17px] text-muted">
+          Use your own statement, or try a sample profile.
+        </p>
         <ButtonLink href="/check" size="lg" className="mt-8">
           Start a check
         </ButtonLink>

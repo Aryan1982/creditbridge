@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSyncExternalStore } from "react";
 import { currentTheme, setTheme, type Theme } from "@/lib/theme";
-import { DemoVideoButton } from "./demo-video";
 import { Logo } from "./logo";
 
 const LINKS = [
@@ -36,10 +35,7 @@ export function SiteHeader() {
           })}
         </nav>
 
-        <div className="flex items-center gap-2 justify-self-end">
-          <DemoVideoButton />
-          <ThemeToggle />
-        </div>
+        <ThemeToggle />
       </div>
     </header>
   );
@@ -58,7 +54,7 @@ function ThemeToggle() {
   return (
     <button
       type="button"
-      className="icon-btn"
+      className="icon-btn justify-self-end"
       aria-label={dark ? "Switch to light appearance" : "Switch to dark appearance"}
       title="Toggle appearance"
       onClick={() => setTheme(dark ? "light" : "dark")}
